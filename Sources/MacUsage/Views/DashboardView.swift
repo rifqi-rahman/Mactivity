@@ -17,7 +17,7 @@ public struct DashboardView: View {
     
     public var body: some View {
         VStack(spacing: 0) {
-            // Top Navigation & Device Bar (Matching Image 2)
+            // Top Navigation & Device Bar
             HStack {
                 HStack(spacing: 8) {
                     DevicePillButton(title: "MacBook Pro M4 Pro", isSelected: uiState.selectedDevice == "MacBook Pro") {
@@ -61,35 +61,40 @@ public struct DashboardView: View {
             .padding(.top, 14)
             .padding(.bottom, 12)
             
-            // Scrollable Bento 2-Column Grid
+            // Symmetrical, Perfectly-Aligned Bento Grid
             ScrollView(.vertical, showsIndicators: false) {
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 12),
-                    GridItem(.flexible(), spacing: 12)
-                ], spacing: 12) {
-                    // Row 1: Core Performance
-                    ProcessorCardView(cpu: collector.cpu)
-                    MemoryCardView(memory: collector.memory)
+                VStack(spacing: 12) {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ], spacing: 12) {
+                        // Row 1: Core Performance (150pt each)
+                        ProcessorCardView(cpu: collector.cpu)
+                        MemoryCardView(memory: collector.memory)
+                        
+                        // Row 2: Storage & Peripherals (150pt each, matching Usage.pro)
+                        DiskCardView(disk: collector.disk)
+                        BluetoothCardView(devices: collector.bluetoothDevices)
+                        
+                        // Row 3: Thermals & Acoustics (150pt each)
+                        TemperatureCardView(thermals: collector.thermals)
+                        FansCardView(fans: collector.fans)
+                        
+                        // Row 4: Connectivity & Ledger (150pt each)
+                        NetworkCardView(network: collector.network)
+                        NetworkDataCardView(network: collector.network)
+                        
+                        // Row 5: Graphics & Power (150pt each)
+                        GPUCardView(gpu: collector.gpu)
+                        BatteryCardView(battery: collector.battery)
+                        
+                        // Row 6: Volumes & SoC Architecture (150pt each)
+                        VolumesCardView(volumes: collector.volumes)
+                        SystemArchCardView(cpu: collector.cpu)
+                    }
                     
-                    // Row 2: Connectivity & Network
-                    NetworkCardView(network: collector.network)
-                    NetworkDataCardView(network: collector.network)
-                    
-                    // Row 3: Storage & Thermals
-                    DiskCardView(disk: collector.disk)
-                    TemperatureCardView(thermals: collector.thermals)
-                    
-                    // Row 4: Cooling & Graphics
-                    FansCardView(fans: collector.fans)
-                    GPUCardView(gpu: collector.gpu)
-                    
-                    // Row 5: Power & Peripherals
-                    BatteryCardView(battery: collector.battery)
-                    BluetoothCardView(devices: collector.bluetoothDevices)
-                    
-                    // Row 6: Task Manager & Volumes
+                    // Row 7: Grand Hero Top Processes Card (Spans Full Width 448pt)
                     ProcessesCardView(topCPU: collector.topProcessesCPU, topMem: collector.topProcessesMemory)
-                    VolumesCardView(volumes: collector.volumes)
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 14)

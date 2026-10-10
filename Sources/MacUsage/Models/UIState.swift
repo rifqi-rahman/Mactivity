@@ -45,6 +45,13 @@ public class UIState: ObservableObject {
     @Published public var processSortField: ProcessSortField = .cpu
     @Published public var processSortAscending: Bool = false
     @Published public var selectedProcessPID: Int? = nil
+    @Published public var hoveredCard: String? = nil
     
-    public init() {}
+    public func setHoveredCard(_ name: String, isHovered: Bool) {
+        if isHovered {
+            self.hoveredCard = name
+        } else if self.hoveredCard == name {
+            self.hoveredCard = nil
+        }
+    }
 }
