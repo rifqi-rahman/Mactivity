@@ -8,7 +8,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         menuBarController = MenuBarController(collector: MetricsCollector.shared)
-        print("Mactivity started successfully on MacBook Pro M4 Pro")
+        print("Mactivity started successfully on \(MetricsCollector.shared.cpu.machineName) (\(MetricsCollector.shared.cpu.chipName))")
     }
 }
 

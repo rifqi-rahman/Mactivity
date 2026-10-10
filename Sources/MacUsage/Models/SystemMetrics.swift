@@ -6,25 +6,37 @@ public struct CPUInfo: Equatable {
     public var userUsage: Double = 0.0
     public var systemUsage: Double = 0.0
     public var idleUsage: Double = 100.0
-    public var coreCount: Int = 14
-    public var chipName: String = "Apple M4 Pro"
+    public var coreCount: Int = ProcessInfo.processInfo.processorCount
+    public var performanceCoreCount: Int = 0
+    public var efficiencyCoreCount: Int = 0
+    public var chipName: String = "Apple Silicon"
+    public var machineName: String = "Mac"
+    public var modelIdentifier: String = "Mac"
     public var history: [Double] = Array(repeating: 0.0, count: 18)
     public var userHistory: [Double] = Array(repeating: 0.0, count: 18)
     public var systemHistory: [Double] = Array(repeating: 0.0, count: 18)
-    public var coreLoads: [Double] = Array(repeating: 0.0, count: 14)
+    public var coreLoads: [Double] = Array(repeating: 0.0, count: max(1, ProcessInfo.processInfo.processorCount))
     
     public init() {}
+    
+    public var topologyDescription: String {
+        if performanceCoreCount > 0 && efficiencyCoreCount > 0 {
+            return "\(performanceCoreCount)P + \(efficiencyCoreCount)E Cores"
+        } else {
+            return "\(coreCount) Cores"
+        }
+    }
 }
 
 public struct MemoryInfo: Equatable {
-    public var totalBytes: UInt64 = 24 * 1024 * 1024 * 1024 // 24 GB default
+    public var totalBytes: UInt64 = ProcessInfo.processInfo.physicalMemory
     public var usedBytes: UInt64 = 0
     public var appBytes: UInt64 = 0
     public var wiredBytes: UInt64 = 0
     public var compressedBytes: UInt64 = 0
     public var freeBytes: UInt64 = 0
     public var usedPercent: Double = 0.0
-    public var pressurePercent: Int = 13 // Normal Apple Silicon baseline
+    public var pressurePercent: Int = 0
     public var swapUsedBytes: UInt64 = 0
     public var swapTotalBytes: UInt64 = 0
     
@@ -46,9 +58,9 @@ public struct NetworkInfo: Equatable {
     public var connectionType: String = "Wi-Fi"
     public var localIP: String = "127.0.0.1"
     public var publicIP: String = "Detecting..."
-    public var dataTodayBytes: UInt64 = 1_540_000_000 // 1.54 GB
-    public var data7DaysBytes: UInt64 = 26_840_000_000 // 26.84 GB
-    public var data30DaysBytes: UInt64 = 139_600_000_000 // 139.6 GB
+    public var dataTodayBytes: UInt64 = 0
+    public var data7DaysBytes: UInt64 = 0
+    public var data30DaysBytes: UInt64 = 0
     
     public init() {}
     
@@ -108,31 +120,37 @@ public struct VolumeInfo: Identifiable, Equatable {
 }
 
 public struct BatteryInfo: Equatable {
+    public var hasBattery: Bool = true
     public var percentage: Int = 100
     public var isCharging: Bool = false
     public var isACConnected: Bool = true
     public var powerWatts: Double = 0.0
     public var healthPercent: Int = 100
-    public var cycleCount: Int = 72
+    public var cycleCount: Int = 0
     public var condition: String = "Normal"
-    public var temperatureC: Double = 28.5
+    public var temperatureC: Double = 0.0
     public var timeRemainingMinutes: Int? = nil
+    public var chargerName: String = "AC Power Adapter"
+    public var chargerWatts: Int = 0
     
     public init() {}
 }
 
 public struct FanInfo: Equatable {
+    public var fanCount: Int = 2 // 0 = fanless (MacBook Air), 1 = single fan (Mac mini / 13" MBP), 2 = dual fans
     public var leftRPM: Int = 0
     public var rightRPM: Int = 0
-    public var maxRPM: Int = 5500
+    public var maxRPM: Int = 5800
     public var status: String = "Silent (Passive)"
     public var history: [Int] = Array(repeating: 0, count: 18)
+    
+    public var isFanless: Bool { fanCount == 0 }
     
     public init() {}
 }
 
 public struct ThermalInfo: Equatable {
-    public var temperatureC: Double = 48.0
+    public var temperatureC: Double = 42.0
     public var temperatureF: Double { temperatureC * 9.0 / 5.0 + 32.0 }
     public var status: String = "Normal"
     public var isThrottled: Bool = false
@@ -143,10 +161,15 @@ public struct ThermalInfo: Equatable {
 public struct GPUInfo: Equatable {
     public var utilizationPercent: Double = 0.0
     public var memoryUsedBytes: UInt64 = 0
-    public var coreCount: Int = 18 // M4 Pro typically 16 or 20
+    public var coreCount: Int = 0
+    public var gpuName: String = "Apple GPU"
     public var history: [Double] = Array(repeating: 0.0, count: 18)
     
     public init() {}
+    
+    public var coreCountString: String {
+        coreCount > 0 ? "\(coreCount)-Core" : "Integrated"
+    }
     
     public var memoryUsedMBString: String {
         let mb = Double(memoryUsedBytes) / 1_048_576.0

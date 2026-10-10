@@ -150,8 +150,8 @@ public struct ProcessorCardView: View {
             title: "Processor Load",
             icon: "cpu",
             targetTab: .processor,
-            unitDetail: "10P + 4E Cores (4.5 GHz) · M4 Pro",
-            badge: "14-Core",
+            unitDetail: "\(cpu.topologyDescription) · \(cpu.chipName)",
+            badge: "\(cpu.coreCount)-Core",
             height: 150
         ) { isHovered in
             VStack(alignment: .leading, spacing: 6) {
@@ -197,8 +197,8 @@ public struct MemoryCardView: View {
             title: "Memory",
             icon: "memorychip",
             targetTab: .memory,
-            unitDetail: "24 GB LPDDR5X · 273 GB/s Bandwidth",
-            badge: "24 GB",
+            unitDetail: "\(Int(round(Double(memory.totalBytes) / 1_073_741_824.0))) GB Unified Memory Architecture",
+            badge: "\(Int(round(Double(memory.totalBytes) / 1_073_741_824.0))) GB",
             height: 150
         ) { isHovered in
             VStack(alignment: .leading, spacing: 6) {
@@ -357,7 +357,7 @@ public struct TemperatureCardView: View {
             title: "Processor Temp",
             icon: "thermometer.medium",
             targetTab: .thermals,
-            unitDetail: "M4 Pro Die Sensors · 0% Throttling",
+            unitDetail: thermals.isThrottled ? "Thermal Throttling Active" : "SoC Die Sensors (0% Throttle)",
             badge: thermals.status,
             height: 150
         ) { isHovered in
@@ -418,17 +418,17 @@ public struct FansCardView: View {
             title: "Cooling Fans",
             icon: "fanblades",
             targetTab: .thermals,
-            unitDetail: "Dual Centrifugal Blowers · Max 5800 RPM",
-            badge: fans.leftRPM > 0 ? "Active" : "Silent",
+            unitDetail: fans.isFanless ? "Fanless Passive Cooling · 0 dB" : "\(fans.fanCount > 1 ? "Dual Cooling Blowers" : "Centrifugal Cooling Fan") · Max \(fans.maxRPM) RPM",
+            badge: fans.isFanless ? "Passive" : (fans.leftRPM > 0 ? "Active" : "Silent"),
             height: 150
         ) { isHovered in
             VStack(alignment: .leading, spacing: 6) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(fans.leftRPM) RPM")
+                    Text(fans.isFanless ? "0 RPM" : "\(fans.leftRPM) RPM")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundColor(MactivityTheme.sand)
                     
-                    Text(fans.status)
+                    Text(fans.isFanless ? "Fanless Architecture" : fans.status)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(Color(white: 0.70))
                 }
@@ -474,7 +474,7 @@ public struct NetworkCardView: View {
             title: "Network Activity",
             icon: "globe",
             targetTab: .network,
-            unitDetail: "Wi-Fi 6E (en0) · 802.11ax · Signal: -48 dBm",
+            unitDetail: "\(network.connectionType) (\(network.interfaceName)) · Active Interface",
             badge: network.connectionType,
             height: 150
         ) { isHovered in
@@ -533,7 +533,7 @@ public struct NetworkDataCardView: View {
             title: "Network Data",
             icon: "chart.line.uptrend.xyaxis",
             targetTab: .network,
-            unitDetail: "Daily Avg: 4.65 GB · Rollover at 00:00",
+            unitDetail: "Rolling 30-Day: \(NetworkInfo.formatDataVolume(network.data30DaysBytes))",
             badge: "Today",
             height: 150
         ) { isHovered in
@@ -587,8 +587,8 @@ public struct GPUCardView: View {
             title: "Graphics (GPU)",
             icon: "display",
             targetTab: .graphics,
-            unitDetail: "Apple M4 Pro 20-Core GPU · Metal 3.2",
-            badge: "20-Core",
+            unitDetail: "\(gpu.gpuName) \(gpu.coreCountString) · Metal",
+            badge: gpu.coreCount > 0 ? "\(gpu.coreCount)-Core" : nil,
             height: 150
         ) { isHovered in
             VStack(alignment: .leading, spacing: 6) {
@@ -616,9 +616,10 @@ public struct GPUCardView: View {
                 
                 if !isHovered {
                     HStack {
-                        Text("M4 Pro 20-Core GPU")
+                        Text("\(gpu.gpuName) \(gpu.coreCountString)")
                             .font(.system(size: 10))
                             .foregroundColor(Color(white: 0.70))
+                            .lineLimit(1)
                         Spacer()
                         Text("VRAM \(String(format: "%.1f GB", Double(gpu.memoryUsedBytes) / 1_073_741_824.0))")
                             .font(.system(size: 10, weight: .medium))
@@ -643,17 +644,17 @@ public struct BatteryCardView: View {
             title: "Battery & Power",
             icon: "battery.100",
             targetTab: .battery,
-            unitDetail: "70 Wh Li-Po · Draw: \(String(format: "%.1f W", battery.powerWatts))",
-            badge: "\(battery.healthPercent)% Health",
+            unitDetail: battery.hasBattery ? (battery.powerWatts > 0 ? "Power Draw: \(String(format: "%.1f W", battery.powerWatts))" : (battery.isACConnected ? "Connected to Power Adapter" : "Running on Battery")) : "Desktop Mac (AC Powered)",
+            badge: battery.hasBattery ? "\(battery.healthPercent)% Health" : "Desktop",
             height: 150
         ) { isHovered in
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("\(battery.percentage)%")
+                    Text(battery.hasBattery ? "\(battery.percentage)%" : "100%")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundColor(MactivityTheme.sand)
                     Spacer()
-                    Text(battery.isCharging ? "Charging" : (battery.isACConnected ? "Power Adapter" : "On Battery"))
+                    Text(battery.hasBattery ? (battery.isCharging ? "Charging" : (battery.isACConnected ? "Power Adapter" : "On Battery")) : "Desktop AC Supply")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(Color(white: 0.70))
                 }
@@ -751,28 +752,30 @@ public struct SystemArchCardView: View {
     
     public var body: some View {
         BentoCardContainer(
-            title: "Apple Silicon",
+            title: "SoC Architecture",
             icon: "apple.logo",
             targetTab: .processor,
-            unitDetail: "150B Transistors · TSMC 3nm (N3E)",
-            badge: "M4 Pro",
+            unitDetail: "\(cpu.chipName) · \(cpu.coreCount) Cores",
+            badge: cpu.chipName,
             height: 150
         ) { isHovered in
             VStack(alignment: .leading, spacing: 4) {
                 Text(cpu.chipName)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(MactivityTheme.sand)
+                    .lineLimit(1)
                 
-                Text("10 Performance + 4 Efficiency Cores")
+                Text(cpu.topologyDescription)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(Color(white: 0.75))
                 
-                Text("16-Core Neural Engine (38 TOPS)")
+                Text(cpu.machineName + " (" + cpu.modelIdentifier + ")")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(MactivityTheme.copper)
+                    .lineLimit(1)
                 
                 if !isHovered {
-                    Text("273 GB/s Unified Memory Bus")
+                    Text("\(String(format: "%.0f", Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824.0)) GB Unified Architecture")
                         .font(.system(size: 9))
                         .foregroundColor(Color(white: 0.65))
                 }

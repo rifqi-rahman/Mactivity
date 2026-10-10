@@ -141,7 +141,28 @@ public class MetricsCollector: ObservableObject {
         var len = MemoryLayout<UInt32>.size
         if sysctlbyname("hw.ncpu", &size, &len, nil, 0) == 0 {
             cpu.coreCount = Int(size)
+        } else {
+            cpu.coreCount = ProcessInfo.processInfo.processorCount
         }
+        
+        var pCores: Int32 = 0
+        var pLen = MemoryLayout<Int32>.size
+        if sysctlbyname("hw.perflevel0.logicalcpu", &pCores, &pLen, nil, 0) == 0 {
+            cpu.performanceCoreCount = Int(pCores)
+        }
+        
+        var eCores: Int32 = 0
+        var eLen = MemoryLayout<Int32>.size
+        if sysctlbyname("hw.perflevel1.logicalcpu", &eCores, &eLen, nil, 0) == 0 {
+            cpu.efficiencyCoreCount = Int(eCores)
+        }
+        
+        if cpu.performanceCoreCount == 0 {
+            cpu.performanceCoreCount = cpu.coreCount
+            cpu.efficiencyCoreCount = 0
+        }
+        
+        cpu.coreLoads = Array(repeating: 0.0, count: max(1, cpu.coreCount))
         
         var chipModel = [CChar](repeating: 0, count: 128)
         var chipLen = chipModel.count
@@ -150,14 +171,114 @@ public class MetricsCollector: ObservableObject {
             if !str.isEmpty {
                 cpu.chipName = str
             }
-        } else {
-            cpu.chipName = "Apple M4 Pro"
+        }
+        
+        var modelId = [CChar](repeating: 0, count: 64)
+        var modelLen = modelId.count
+        if sysctlbyname("hw.model", &modelId, &modelLen, nil, 0) == 0 {
+            let str = String(cString: modelId).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !str.isEmpty {
+                cpu.modelIdentifier = str
+            }
         }
         
         var memSize: UInt64 = 0
         var memLen = MemoryLayout<UInt64>.size
         if sysctlbyname("hw.memsize", &memSize, &memLen, nil, 0) == 0 {
             memory.totalBytes = memSize
+        } else {
+            memory.totalBytes = ProcessInfo.processInfo.physicalMemory
+        }
+        
+        // Deep hardware detection in background
+        let currentChip = self.cpu.chipName
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self = self else { return }
+            self.detectHardwareDeepSpecs(defaultChip: currentChip)
+        }
+    }
+    
+    nonisolated private func detectHardwareDeepSpecs(defaultChip: String) {
+        // 1. Hardware Overview (SPHardwareDataType)
+        let hwPipe = Pipe()
+        let hwProc = Process()
+        hwProc.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+        hwProc.arguments = ["SPHardwareDataType", "-json"]
+        hwProc.standardOutput = hwPipe
+        hwProc.standardError = FileHandle.nullDevice
+        
+        var detectedMachine = "Mac"
+        var detectedChip = defaultChip
+        
+        if (try? hwProc.run()) != nil {
+            hwProc.waitUntilExit()
+            let data = hwPipe.fileHandleForReading.readDataToEndOfFile()
+            if let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+               let list = json["SPHardwareDataType"] as? [[String: Any]],
+               let first = list.first {
+                if let name = first["machine_name"] as? String, !name.isEmpty {
+                    detectedMachine = name
+                }
+                if let chip = first["chip_type"] as? String, !chip.isEmpty {
+                    detectedChip = chip
+                }
+            }
+        }
+        
+        // 2. GPU Overview (SPDisplaysDataType)
+        let dispPipe = Pipe()
+        let dispProc = Process()
+        dispProc.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+        dispProc.arguments = ["SPDisplaysDataType", "-json"]
+        dispProc.standardOutput = dispPipe
+        dispProc.standardError = FileHandle.nullDevice
+        
+        var gpuName = detectedChip
+        var gpuCores = 0
+        
+        if (try? dispProc.run()) != nil {
+            dispProc.waitUntilExit()
+            let data = dispPipe.fileHandleForReading.readDataToEndOfFile()
+            if let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+               let list = json["SPDisplaysDataType"] as? [[String: Any]],
+               let first = list.first {
+                if let name = first["sppci_model"] as? String ?? first["_name"] as? String {
+                    gpuName = name
+                }
+                if let coresStr = first["sppci_cores"] as? String, let c = Int(coresStr) {
+                    gpuCores = c
+                }
+            }
+        }
+        
+        // 3. Determine Fan configuration dynamically
+        var fanCount = 2
+        let lowerMachine = detectedMachine.lowercased()
+        if lowerMachine.contains("air") {
+            fanCount = 0 // MacBook Air is completely fanless
+        } else if lowerMachine.contains("mini") || lowerMachine.contains("imac") {
+            fanCount = 1 // Mac mini & iMac have a single blower
+        } else if lowerMachine.contains("studio") || lowerMachine.contains("macbook pro") {
+            fanCount = 2 // Mac Studio & MacBook Pro have dual blowers
+        } else if lowerMachine.contains("pro") && !lowerMachine.contains("macbook") {
+            fanCount = 4 // Mac Pro desktop
+        }
+        
+        // 4. Determine Battery presence
+        let hasBattery = lowerMachine.contains("macbook")
+        
+        DispatchQueue.main.async {
+            self.cpu.machineName = detectedMachine
+            self.cpu.chipName = detectedChip
+            self.gpu.gpuName = gpuName
+            self.gpu.coreCount = gpuCores
+            self.fans.fanCount = fanCount
+            self.battery.hasBattery = hasBattery
+            if fanCount == 0 {
+                self.fans.leftRPM = 0
+                self.fans.rightRPM = 0
+                self.fans.status = "Fanless Design (100% Passive Cooling)"
+            }
         }
     }
     
@@ -288,7 +409,7 @@ public class MetricsCollector: ObservableObject {
         }
         
         if kerr == KERN_SUCCESS {
-            let pageSize: UInt64 = 16384
+            let pageSize = UInt64(getpagesize())
             let appBytes = UInt64(vmStats.internal_page_count - vmStats.purgeable_count) * pageSize
             let wiredBytes = UInt64(vmStats.wire_count) * pageSize
             let compressedBytes = UInt64(vmStats.compressor_page_count) * pageSize
@@ -419,7 +540,7 @@ public class MetricsCollector: ObservableObject {
                 } catch {
                     await MainActor.run {
                         if self.network.publicIP == "Detecting..." {
-                            self.network.publicIP = "118.99.112.137"
+                            self.network.publicIP = "Unavailable"
                         }
                     }
                 }
@@ -431,14 +552,14 @@ public class MetricsCollector: ObservableObject {
         let def = UserDefaults.standard
         let savedDate = def.object(forKey: kTodayDate) as? Date ?? Date()
         if Calendar.current.isDateInToday(savedDate) {
-            let today = def.object(forKey: kTodayBytes) as? UInt64 ?? 1_540_000_000
+            let today = def.object(forKey: kTodayBytes) as? UInt64 ?? 0
             network.dataTodayBytes = today
         } else {
-            network.dataTodayBytes = 250_000_000
+            network.dataTodayBytes = 0
             def.set(Date(), forKey: kTodayDate)
         }
-        network.data7DaysBytes = def.object(forKey: kWeekBytes) as? UInt64 ?? 26_840_000_000
-        network.data30DaysBytes = def.object(forKey: kMonthBytes) as? UInt64 ?? 139_600_000_000
+        network.data7DaysBytes = def.object(forKey: kWeekBytes) as? UInt64 ?? 0
+        network.data30DaysBytes = def.object(forKey: kMonthBytes) as? UInt64 ?? 0
     }
     
     private func persistNetworkData() {
@@ -498,21 +619,34 @@ public class MetricsCollector: ObservableObject {
     private func sampleBattery() {
         autoreleasepool {
             guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
-                  let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [CFTypeRef] else { return }
+                  let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [CFTypeRef] else {
+                battery.hasBattery = false
+                return
+            }
             
+            if sources.isEmpty {
+                battery.hasBattery = false
+                return
+            }
+            
+            var foundInternalBattery = false
             for source in sources {
                 guard let desc = IOPSGetPowerSourceDescription(snapshot, source)?.takeUnretainedValue() as? [String: Any] else { continue }
-                
-                let cur = desc[kIOPSCurrentCapacityKey] as? Int ?? 100
-                let state = desc[kIOPSPowerSourceStateKey] as? String ?? "AC Power"
-                let isCharging = desc[kIOPSIsChargingKey] as? Bool ?? false
-                let timeRemaining = desc[kIOPSTimeToEmptyKey] as? Int
-                
-                battery.percentage = cur
-                battery.isCharging = isCharging
-                battery.isACConnected = (state == kIOPSACPowerValue)
-                battery.timeRemainingMinutes = (timeRemaining != nil && timeRemaining! > 0) ? timeRemaining : nil
+                let type = desc[kIOPSTypeKey] as? String ?? ""
+                if type == kIOPSInternalBatteryType || desc[kIOPSCurrentCapacityKey] != nil {
+                    foundInternalBattery = true
+                    let cur = desc[kIOPSCurrentCapacityKey] as? Int ?? 100
+                    let state = desc[kIOPSPowerSourceStateKey] as? String ?? "AC Power"
+                    let isCharging = desc[kIOPSIsChargingKey] as? Bool ?? false
+                    let timeRemaining = desc[kIOPSTimeToEmptyKey] as? Int
+                    
+                    battery.percentage = cur
+                    battery.isCharging = isCharging
+                    battery.isACConnected = (state == kIOPSACPowerValue)
+                    battery.timeRemainingMinutes = (timeRemaining != nil && timeRemaining! > 0) ? timeRemaining : nil
+                }
             }
+            battery.hasBattery = foundInternalBattery
             
             guard let matching = IOServiceMatching("AppleSmartBattery") else { return }
             var iterator: io_iterator_t = 0
@@ -613,24 +747,34 @@ public class MetricsCollector: ObservableObject {
         
         thermals.temperatureC = min(99.0, max(36.0, baseTemp))
         
-        // Dynamic acoustic cooling on MacBook Pro M4 Pro
-        var targetRPM = 0
-        if thermals.temperatureC > 78.0 {
-            targetRPM = Int(2800 + (thermals.temperatureC - 78.0) * 110)
-            fans.status = "High Performance"
-        } else if thermals.temperatureC > 65.0 {
-            targetRPM = Int(1500 + (thermals.temperatureC - 65.0) * 80)
-            fans.status = "Active Cooling"
-        } else if thermals.temperatureC > 52.0 && cpu.totalUsage > 30.0 {
-            targetRPM = Int(1200 + cpu.totalUsage * 5)
-            fans.status = "Quiet Mode"
+        // Dynamic acoustic cooling adapted to Mac model
+        if fans.isFanless {
+            fans.leftRPM = 0
+            fans.rightRPM = 0
+            fans.status = "Fanless (0 dB Silent)"
         } else {
-            targetRPM = 0
-            fans.status = "Silent (Passive)"
+            var targetRPM = 0
+            if thermals.temperatureC > 78.0 {
+                targetRPM = Int(2800 + (thermals.temperatureC - 78.0) * 110)
+                fans.status = "High Performance"
+            } else if thermals.temperatureC > 65.0 {
+                targetRPM = Int(1500 + (thermals.temperatureC - 65.0) * 80)
+                fans.status = "Active Cooling"
+            } else if thermals.temperatureC > 52.0 && cpu.totalUsage > 30.0 {
+                targetRPM = Int(1200 + cpu.totalUsage * 5)
+                fans.status = "Quiet Mode"
+            } else {
+                targetRPM = 0
+                fans.status = "Silent (Passive)"
+            }
+            
+            fans.leftRPM = min(fans.maxRPM, targetRPM)
+            if fans.fanCount >= 2 {
+                fans.rightRPM = min(fans.maxRPM, targetRPM > 0 ? targetRPM + 15 : 0)
+            } else {
+                fans.rightRPM = 0
+            }
         }
-        
-        fans.leftRPM = min(fans.maxRPM, targetRPM)
-        fans.rightRPM = min(fans.maxRPM, targetRPM > 0 ? targetRPM + 15 : 0)
         
         if fans.history.count >= 18 {
             fans.history.removeFirst()

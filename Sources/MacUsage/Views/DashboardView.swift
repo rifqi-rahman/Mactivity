@@ -20,8 +20,8 @@ public struct DashboardView: View {
             // Top Navigation & Device Bar
             HStack {
                 HStack(spacing: 8) {
-                    DevicePillButton(title: "MacBook Pro M4 Pro", isSelected: uiState.selectedDevice == "MacBook Pro") {
-                        uiState.selectedDevice = "MacBook Pro"
+                    DevicePillButton(title: "\(collector.cpu.machineName) · \(collector.cpu.chipName)", isSelected: true) {
+                        WindowManager.shared.openWindow(tab: .processor)
                     }
                     
                     Button(action: {

@@ -109,7 +109,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     private func showContextMenu() {
         let menu = NSMenu()
         
-        menu.addItem(NSMenuItem(title: "Mactivity · M4 Pro", action: nil, keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Mactivity · \(collector.cpu.chipName)", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         
         menu.addItem(NSMenuItem(title: "Open Dashboard Popover", action: #selector(openDashboardAction), keyEquivalent: "d"))

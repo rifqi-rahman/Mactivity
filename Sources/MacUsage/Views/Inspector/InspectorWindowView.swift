@@ -417,7 +417,7 @@ struct ProcessesInspectorView: View {
     }
 }
 
-// MARK: - 2. Processor Inspector View (CPU & M4 Pro Core Topology)
+// MARK: - 2. Processor Inspector View (CPU & Core Topology)
 struct ProcessorInspectorView: View {
     @ObservedObject var collector: MetricsCollector
     
@@ -463,17 +463,24 @@ struct ProcessorInspectorView: View {
                 // Responsive Adaptive Core Topology Grid
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Apple M4 Pro Core Topology (\(collector.cpu.coreCount) Active Cores)")
+                        Text("\(collector.cpu.chipName) Core Topology (\(collector.cpu.coreCount) Active Cores)")
                             .font(.system(size: 13, weight: .bold))
                         Spacer()
-                        HStack(spacing: 10) {
+                        if collector.cpu.performanceCoreCount > 0 && collector.cpu.efficiencyCoreCount > 0 {
+                            HStack(spacing: 10) {
+                                HStack(spacing: 4) {
+                                    Circle().fill(MactivityTheme.sand).frame(width: 6, height: 6)
+                                    Text("P-Cores (1-\(collector.cpu.performanceCoreCount))").font(.system(size: 10)).foregroundColor(.secondary)
+                                }
+                                HStack(spacing: 4) {
+                                    Circle().fill(MactivityTheme.copper).frame(width: 6, height: 6)
+                                    Text("E-Cores (1-\(collector.cpu.efficiencyCoreCount))").font(.system(size: 10)).foregroundColor(.secondary)
+                                }
+                            }
+                        } else {
                             HStack(spacing: 4) {
                                 Circle().fill(MactivityTheme.sand).frame(width: 6, height: 6)
-                                Text("P-Cores (1-10)").font(.system(size: 10)).foregroundColor(.secondary)
-                            }
-                            HStack(spacing: 4) {
-                                Circle().fill(MactivityTheme.copper).frame(width: 6, height: 6)
-                                Text("E-Cores (1-4)").font(.system(size: 10)).foregroundColor(.secondary)
+                                Text("Cores (1-\(collector.cpu.coreCount))").font(.system(size: 10)).foregroundColor(.secondary)
                             }
                         }
                     }
@@ -481,10 +488,19 @@ struct ProcessorInspectorView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 68, maximum: 100), spacing: 8)], spacing: 8) {
                         ForEach(0..<collector.cpu.coreLoads.count, id: \.self) { idx in
                             let load = collector.cpu.coreLoads[idx]
-                            let isPCore = idx < 10
+                            let pCount = collector.cpu.performanceCoreCount > 0 ? collector.cpu.performanceCoreCount : collector.cpu.coreCount
+                            let hasHybridTopology = collector.cpu.performanceCoreCount > 0 && collector.cpu.efficiencyCoreCount > 0
+                            let isPCore = idx < pCount
+                            let coreLabel: String = {
+                                if hasHybridTopology {
+                                    return isPCore ? "P\(idx + 1)" : "E\(idx - pCount + 1)"
+                                } else {
+                                    return "C\(idx + 1)"
+                                }
+                            }()
                             
                             VStack(spacing: 6) {
-                                Text(isPCore ? "P\(idx + 1)" : "E\(idx - 9)")
+                                Text(coreLabel)
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(isPCore ? MactivityTheme.sand : MactivityTheme.copper)
                                 
@@ -516,7 +532,7 @@ struct ProcessorInspectorView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Architecture Details")
                             .font(.system(size: 12, weight: .bold))
-                        Text("Second-generation 3-nanometer transistor architecture with 273 GB/s unified memory bandwidth.")
+                        Text("Unified memory architecture powered by \(collector.cpu.chipName) with \(collector.cpu.topologyDescription).")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }
@@ -525,7 +541,7 @@ struct ProcessorInspectorView: View {
                         Text("Hardware Acceleration")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(MactivityTheme.sand)
-                        Text("Hardware AV1 · Ray Tracing · 16-Core NPU")
+                        Text("Hardware Accelerated Engine · \(collector.cpu.modelIdentifier)")
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
                     }
@@ -549,13 +565,13 @@ struct GraphicsInspectorView: View {
                 // Header GPU Overview
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Apple M4 Pro Graphics Processor")
+                        Text("\(collector.gpu.gpuName) Graphics Processor")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.secondary)
                         Text(String(format: "%.1f%%", collector.gpu.utilizationPercent))
                             .font(.system(size: 38, weight: .bold, design: .rounded))
                             .foregroundColor(MactivityTheme.sand)
-                        Text("20-Core Hardware Accelerated GPU · Metal 3.2 Engine")
+                        Text("\(collector.gpu.coreCountString) · Metal Hardware Engine")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }
@@ -577,17 +593,17 @@ struct GraphicsInspectorView: View {
                 
                 // Adaptive Feature Tiles
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 350), spacing: 12)], spacing: 12) {
-                    GpuFeatureCard(title: "Hardware Ray Tracing", subtitle: "2nd Gen Geometry Engine", value: "Active", icon: "cube.transparent")
-                    GpuFeatureCard(title: "Dynamic Caching", subtitle: "On-Chip Memory Allocation", value: "Hardware Enabled", icon: "memorychip")
-                    GpuFeatureCard(title: "Mesh Shading", subtitle: "Complex Geometry Pipelines", value: "Supported", icon: "waveform.path.ecg")
-                    GpuFeatureCard(title: "ProMotion Display", subtitle: "Liquid Retina XDR", value: "120Hz Adaptive", icon: "display")
+                    GpuFeatureCard(title: "Metal Acceleration", subtitle: "Low-overhead compute & graphics API", value: "Metal 3 Ready", icon: "cpu")
+                    GpuFeatureCard(title: "Dynamic Caching", subtitle: "Unified Memory Allocation", value: "Hardware Enabled", icon: "memorychip")
+                    GpuFeatureCard(title: "Hardware Shading", subtitle: "Complex Rendering Pipelines", value: "Supported", icon: "waveform.path.ecg")
+                    GpuFeatureCard(title: "Unified Display Engine", subtitle: "\(collector.cpu.machineName) Output", value: "Direct Rendering", icon: "display")
                 }
                 
                 // GPU Architecture Details
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Graphics & Display Subsystem")
                         .font(.system(size: 13, weight: .bold))
-                    Text("The Apple M4 Pro GPU architecture integrates dynamic caching to allocate local memory on hardware in real time, dramatically increasing GPU utilization for high-demand pro apps and gaming without CPU-bound scheduling overhead.")
+                    Text("The \(collector.gpu.gpuName) architecture integrates hardware-accelerated rasterization and compute pipelines directly across unified memory, maximizing rendering throughput and energy efficiency.")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .lineSpacing(3)
@@ -837,37 +853,72 @@ struct BatteryInspectorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                HStack(spacing: 20) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Apple Silicon Power & Battery")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
-                        Text("\(collector.battery.percentage)%")
-                            .font(.system(size: 38, weight: .bold, design: .rounded))
-                            .foregroundColor(collector.battery.percentage > 20 ? MactivityTheme.sand : .red)
-                        Text(collector.battery.isACConnected ? "Connected to Power Adapter (AC)" : "Running on Battery Power")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                if collector.battery.hasBattery {
+                    HStack(spacing: 20) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(collector.cpu.machineName) Power & Battery")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Text("\(collector.battery.percentage)%")
+                                .font(.system(size: 38, weight: .bold, design: .rounded))
+                                .foregroundColor(collector.battery.percentage > 20 ? MactivityTheme.sand : .red)
+                            Text(collector.battery.isACConnected ? "Connected to Power Adapter (AC)" : "Running on Battery Power")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 6) {
+                            Text("\(collector.battery.healthPercent)% Health")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.green)
+                            Text("\(collector.battery.cycleCount) Cycle Count")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                        }
                     }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 6) {
-                        Text("\(collector.battery.healthPercent)% Health")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.green)
-                        Text("\(collector.battery.cycleCount) Cycle Count")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                    .padding(16)
+                    .background(Color.primary.opacity(0.04))
+                    .cornerRadius(12)
+                    
+                    // Power Efficiency Telemetry
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180, maximum: 300), spacing: 12)], spacing: 12) {
+                        PowerMetricCard(title: "Charging State", value: collector.battery.isCharging ? "Charging" : (collector.battery.isACConnected ? "Fully Charged" : "Discharging"), icon: "bolt.fill")
+                        PowerMetricCard(title: "Battery Health", value: collector.battery.healthPercent >= 80 ? "Normal" : "Service Recommended", icon: "heart.fill")
+                        PowerMetricCard(title: "Battery Cycles", value: "\(collector.battery.cycleCount) / 1000", icon: "arrow.triangle.2.circlepath")
                     }
-                }
-                .padding(16)
-                .background(Color.primary.opacity(0.04))
-                .cornerRadius(12)
-                
-                // Power Efficiency Telemetry
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180, maximum: 300), spacing: 12)], spacing: 12) {
-                    PowerMetricCard(title: "Charging State", value: collector.battery.isCharging ? "Charging" : (collector.battery.isACConnected ? "Fully Charged" : "Discharging"), icon: "bolt.fill")
-                    PowerMetricCard(title: "Battery Health", value: collector.battery.healthPercent >= 80 ? "Normal" : "Service Recommended", icon: "heart.fill")
-                    PowerMetricCard(title: "Battery Cycles", value: "\(collector.battery.cycleCount) / 1000", icon: "arrow.triangle.2.circlepath")
+                } else {
+                    // Desktop Mac Mode (AC Power Direct, No Battery Cell)
+                    HStack(spacing: 20) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(collector.cpu.machineName) Power Architecture")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Text("AC Power Direct")
+                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .foregroundColor(MactivityTheme.sand)
+                            Text("Continuous Mains Power · Desktop Architecture")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 6) {
+                            Text("Desktop Hardware")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(MactivityTheme.copper)
+                            Text("No Battery Degradation")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(16)
+                    .background(Color.primary.opacity(0.04))
+                    .cornerRadius(12)
+                    
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180, maximum: 300), spacing: 12)], spacing: 12) {
+                        PowerMetricCard(title: "Power Source", value: "AC Wall Outlet", icon: "powerplug.fill")
+                        PowerMetricCard(title: "Battery Cell", value: "None (Desktop)", icon: "battery.0")
+                        PowerMetricCard(title: "Thermal Governor", value: "Direct AC Rails", icon: "bolt.shield.fill")
+                    }
                 }
             }
             .padding(18)
@@ -911,7 +962,7 @@ struct ThermalsInspectorView: View {
                 // Header Thermals Status
                 HStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Apple M4 Pro Thermal Envelope")
+                        Text("\(collector.cpu.chipName) Thermal Envelope")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.secondary)
                         Text(String(format: "%.0f°C", collector.thermals.temperatureC))
@@ -929,14 +980,46 @@ struct ThermalsInspectorView: View {
                 .background(Color.primary.opacity(0.04))
                 .cornerRadius(12)
                 
-                // Dual Centrifugal Cooling Fans
+                // Fan Telemetry (Dynamically handling Fanless, Single Fan, Dual Fans)
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Dual Centrifugal Blowers Telemetry")
-                        .font(.system(size: 13, weight: .bold))
-                    
-                    HStack(spacing: 12) {
-                        FanCard(title: "Left Cooling Fan", rpm: collector.fans.leftRPM, status: collector.fans.status)
-                        FanCard(title: "Right Cooling Fan", rpm: collector.fans.rightRPM, status: collector.fans.status)
+                    if collector.fans.isFanless {
+                        Text("Fanless Acoustic Architecture")
+                            .font(.system(size: 13, weight: .bold))
+                        
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Image(systemName: "wind.snow")
+                                        .font(.system(size: 18))
+                                        .foregroundColor(MactivityTheme.sand)
+                                    Spacer()
+                                    Text("0 dB Completely Silent")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(.green)
+                                }
+                                Text("100% Passive Cooling")
+                                    .font(.system(size: 16, weight: .bold))
+                                Text("This \(collector.cpu.machineName) features a silent fanless thermal system with passive aluminum conduction.")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(14)
+                            .background(Color.primary.opacity(0.03))
+                            .cornerRadius(10)
+                        }
+                    } else if collector.fans.fanCount == 1 {
+                        Text("Cooling Blower Telemetry")
+                            .font(.system(size: 13, weight: .bold))
+                        
+                        FanCard(title: "System Cooling Blower", rpm: collector.fans.leftRPM, status: collector.fans.status)
+                    } else {
+                        Text("Dual Centrifugal Blowers Telemetry")
+                            .font(.system(size: 13, weight: .bold))
+                        
+                        HStack(spacing: 12) {
+                            FanCard(title: "Left Cooling Blower", rpm: collector.fans.leftRPM, status: collector.fans.status)
+                            FanCard(title: "Right Cooling Blower", rpm: collector.fans.rightRPM, status: collector.fans.status)
+                        }
                     }
                 }
                 .padding(16)
@@ -945,9 +1028,11 @@ struct ThermalsInspectorView: View {
                 
                 // Acoustic Profile Details
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Apple Silicon Acoustic Behavior")
+                    Text("\(collector.cpu.machineName) Acoustic Profile")
                         .font(.system(size: 12, weight: .bold))
-                    Text("MacBook Pro M4 Pro utilizes dynamic thermals: fans remain completely silent (0 RPM) during day-to-day code editing and browsing, ramping up smoothly to disperse heat under heavy Xcode builds and GPU shaders.")
+                    Text(collector.fans.isFanless
+                         ? "Fanless design delivers zero audible noise, relying on thermal throttling governor and natural convective heat transfer."
+                         : "\(collector.cpu.machineName) utilizes dynamic thermal curves: fans remain quiet or completely silent during general productivity, smoothly ramping RPM when compiling or rendering complex workloads.")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .lineSpacing(3)
@@ -1015,7 +1100,7 @@ struct BluetoothInspectorView: View {
                         Text("Bluetooth Peripherals & Connected Devices")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.secondary)
-                        Text("Apple Silicon Wireless Core")
+                        Text("\(collector.cpu.chipName) Wireless Subsystem")
                             .font(.system(size: 24, weight: .bold))
                         Text("IOBluetooth & Apple HID Event Service Telemetry")
                             .font(.system(size: 11))
@@ -1176,10 +1261,17 @@ struct BluetoothDeviceCard: View {
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.secondary)
                     }
-                } else {
+                } else if device.type == .placeholder {
                     Text("Slot Available")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
+                } else {
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.gray).frame(width: 6, height: 6)
+                        Text("Offline / Paired")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             
@@ -1225,7 +1317,7 @@ struct BluetoothDeviceCard: View {
                 }
             } else {
                 HStack {
-                    Text("Connect via Bluetooth Settings")
+                    Text(device.type == .placeholder ? "Connect via Bluetooth Settings" : "Offline / Out of Range")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                     Spacer()
