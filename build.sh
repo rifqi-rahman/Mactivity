@@ -11,6 +11,10 @@ CONTENTS="$APP_BUNDLE/Contents"
 MACOS_DIR="$CONTENTS/MacOS"
 RESOURCES_DIR="$CONTENTS/Resources"
 
+if [ "$1" = "--package" ]; then
+  exec "$SCRIPT_DIR/scripts/package-release.sh"
+fi
+
 echo "==> Building $APP_NAME for macOS (Apple Silicon M4 Pro)..."
 mkdir -p "$BUILD_DIR"
 mkdir -p ".build/ModuleCache"

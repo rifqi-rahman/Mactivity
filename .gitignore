@@ -10,8 +10,11 @@ Icon\r
 # Build Artifacts & Compiled Binaries
 /.build
 /build
+/dist
 *.app
 *.dSYM
+*.dmg
+*.zip
 *.o
 *.a
 *.dylib
