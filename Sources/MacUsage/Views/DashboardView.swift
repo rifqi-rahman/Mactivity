@@ -32,20 +32,19 @@ public struct DashboardView: View {
                     let visibleCards = uiState.bentoCardsOrder.filter { !uiState.hiddenBentoCards.contains($0.rawValue) }
                     let rows = buildRows(from: visibleCards)
                     
-                    ForEach(0..<rows.count, id: \.self) { rowIndex in
-                        let rowCards = rows[rowIndex]
-                        if rowCards.count == 1 && rowCards[0].isFullWidth {
+                    ForEach(rows) { row in
+                        if row.isFullWidth {
                             // Full-Width Card (e.g., Top Processes)
-                            cardWrapper(for: rowCards[0], isFullWidth: true)
+                            cardWrapper(for: row.cards[0], isFullWidth: true)
                         } else {
                             // Two-Column Grid Row
                             HStack(spacing: 12) {
-                                ForEach(rowCards) { card in
+                                ForEach(row.cards) { card in
                                     cardWrapper(for: card, isFullWidth: false)
                                 }
-                                if rowCards.count == 1 {
+                                if row.cards.count == 1 {
                                     Spacer()
-                                        .frame(maxWidth: .infinity)
+                                        .frame(width: 218)
                                 }
                             }
                         }
@@ -76,27 +75,27 @@ public struct DashboardView: View {
     }
     
     // MARK: - Row Chunking Helper
-    private func buildRows(from cards: [BentoCardID]) -> [[BentoCardID]] {
-        var rows: [[BentoCardID]] = []
+    private func buildRows(from cards: [BentoCardID]) -> [BentoRow] {
+        var rows: [BentoRow] = []
         var currentRow: [BentoCardID] = []
         
         for card in cards {
             if card.isFullWidth {
                 if !currentRow.isEmpty {
-                    rows.append(currentRow)
+                    rows.append(BentoRow(id: currentRow.map(\.rawValue).joined(separator: "_"), cards: currentRow))
                     currentRow = []
                 }
-                rows.append([card])
+                rows.append(BentoRow(id: card.rawValue, cards: [card]))
             } else {
                 currentRow.append(card)
                 if currentRow.count == 2 {
-                    rows.append(currentRow)
+                    rows.append(BentoRow(id: currentRow.map(\.rawValue).joined(separator: "_"), cards: currentRow))
                     currentRow = []
                 }
             }
         }
         if !currentRow.isEmpty {
-            rows.append(currentRow)
+            rows.append(BentoRow(id: currentRow.map(\.rawValue).joined(separator: "_"), cards: currentRow))
         }
         return rows
     }
@@ -252,7 +251,7 @@ public struct DashboardView: View {
     // MARK: - Card Wrapper with Edit Overlay & Drag-Drop Support
     @ViewBuilder
     private func cardWrapper(for card: BentoCardID, isFullWidth: Bool) -> some View {
-        ZStack(alignment: .topTrailing) {
+        let cardContent = ZStack(alignment: .topTrailing) {
             // Actual Interactive Metric Card
             cardView(for: card)
                 .opacity(uiState.draggedBentoCard == card ? 0.40 : 1.0)
@@ -335,11 +334,18 @@ public struct DashboardView: View {
                 )
             }
         }
-        .onDrag {
-            uiState.draggedBentoCard = card
-            return NSItemProvider(object: card.rawValue as NSString)
+        .frame(width: isFullWidth ? 448 : 218)
+        
+        if uiState.isEditBentoLayoutMode {
+            cardContent
+                .onDrag {
+                    uiState.draggedBentoCard = card
+                    return NSItemProvider(object: card.rawValue as NSString)
+                }
+                .onDrop(of: [.plainText, .text], delegate: BentoCardDropDelegate(targetCard: card, uiState: uiState))
+        } else {
+            cardContent
         }
-        .onDrop(of: [.plainText, .text], delegate: BentoCardDropDelegate(targetCard: card, uiState: uiState))
     }
     
     // MARK: - Dynamic Card View Switcher
@@ -579,6 +585,16 @@ struct DevicePillButton: View {
                 .cornerRadius(12)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Row Model for Dynamic Bento Grid
+struct BentoRow: Identifiable {
+    let id: String
+    let cards: [BentoCardID]
+    
+    var isFullWidth: Bool {
+        cards.count == 1 && cards[0].isFullWidth
     }
 }
 

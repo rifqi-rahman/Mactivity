@@ -26,12 +26,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         WindowManager.shared.openWindow(tab: .dashboard)
         return true
     }
-    
-    func applicationDidBecomeActive(_ notification: Notification) {
-        if !WindowManager.shared.isWindowVisible {
-            WindowManager.shared.openWindow(tab: .dashboard)
-        }
-    }
 }
 
 @main

@@ -148,7 +148,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     
     @objc private func togglePopover(_ sender: AnyObject?) {
         let event = NSApp.currentEvent
-        if event?.type == .rightMouseUp {
+        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
             showContextMenu()
             return
         }
@@ -160,7 +160,9 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         } else {
             collector.setPopoverVisibility(true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            if let window = popover.contentViewController?.view.window {
+                window.makeKey()
+            }
         }
     }
     
@@ -209,9 +211,9 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Mactivity", action: #selector(quitAction), keyEquivalent: "q"))
         
-        statusItem.menu = menu
-        statusItem.button?.performClick(nil)
-        statusItem.menu = nil // Restore toggle behavior after click
+        if let button = statusItem.button {
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 4), in: button)
+        }
     }
     
     @objc private func setMetricModeAction(_ sender: NSMenuItem) {
