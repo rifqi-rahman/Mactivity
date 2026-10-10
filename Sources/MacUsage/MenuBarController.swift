@@ -9,6 +9,10 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     private var collector: MetricsCollector
     private var updateTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
+    private var globalEventMonitor: Any?
+    private var localEventMonitor: Any?
+    private var lastCloseTime: Date = .distantPast
+    private var wasClosedByStatusItemClick: Bool = false
     
     public init(collector: MetricsCollector) {
         self.collector = collector
@@ -146,36 +150,121 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         button.font = NSFont.monospacedDigitSystemFont(ofSize: 11.5, weight: .medium)
     }
     
+    public func showPopover() {
+        guard let button = statusItem.button else { return }
+        collector.setPopoverVisibility(true)
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        configurePopoverWindow()
+        startEventMonitoring()
+    }
+    
+    public func closePopover() {
+        stopEventMonitoring()
+        collector.setPopoverVisibility(false)
+        popover.performClose(nil)
+    }
+    
     @objc private func togglePopover(_ sender: AnyObject?) {
         let event = NSApp.currentEvent
-        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+        if event?.type == .rightMouseUp || event?.type == .rightMouseDown || event?.modifierFlags.contains(.control) == true {
+            closePopover()
             showContextMenu()
             return
         }
         
-        guard let button = statusItem.button else { return }
-        
         if popover.isShown {
-            popover.performClose(sender)
-        } else {
-            collector.setPopoverVisibility(true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            configurePopoverWindow()
+            closePopover()
+            return
         }
+        
+        // If the popover was just closed due to clicking this status bar button,
+        // or closed within 400ms while mouse is inside the button, prevent immediate reopening.
+        if wasClosedByStatusItemClick || (isMouseInsideStatusButton() && Date().timeIntervalSince(lastCloseTime) < 0.4) {
+            wasClosedByStatusItemClick = false
+            return
+        }
+        
+        showPopover()
     }
     
     // MARK: - NSPopoverDelegate
     public func popoverWillShow(_ notification: Notification) {
         collector.setPopoverVisibility(true)
         configurePopoverWindow()
+        startEventMonitoring()
     }
     
     public func popoverDidShow(_ notification: Notification) {
         configurePopoverWindow()
+        startEventMonitoring()
     }
     
     public func popoverDidClose(_ notification: Notification) {
         collector.setPopoverVisibility(false)
+        lastCloseTime = Date()
+        wasClosedByStatusItemClick = isMouseInsideStatusButton()
+        stopEventMonitoring()
+    }
+    
+    /// Monitors mouse clicks outside the popover window (in other apps, spaces, or desktop)
+    /// as well as the Escape key to close the popover cleanly.
+    private func startEventMonitoring() {
+        stopEventMonitoring()
+        
+        // Global monitor catches clicks in all other apps, Desktop, and fullscreen spaces
+        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                if self.popover.isShown {
+                    self.closePopover()
+                }
+            }
+        }
+        
+        // Local monitor catches clicks inside Mactivity (e.g. other windows) and ESC key
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown, .keyDown]) { [weak self] event in
+            guard let self = self else { return event }
+            
+            // ESC key closes popover immediately
+            if event.type == .keyDown && event.keyCode == 53 {
+                DispatchQueue.main.async {
+                    self.closePopover()
+                }
+                return nil
+            }
+            
+            if self.popover.isShown {
+                let popoverWindow = self.popover.contentViewController?.view.window
+                let statusWindow = self.statusItem.button?.window
+                
+                // If click is outside both popover window and status bar button, close popover
+                if event.window != popoverWindow && event.window != statusWindow {
+                    DispatchQueue.main.async {
+                        self.closePopover()
+                    }
+                }
+            }
+            return event
+        }
+    }
+    
+    private func stopEventMonitoring() {
+        if let monitor = globalEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalEventMonitor = nil
+        }
+        if let monitor = localEventMonitor {
+            NSEvent.removeMonitor(monitor)
+            localEventMonitor = nil
+        }
+    }
+    
+    private func isMouseInsideStatusButton() -> Bool {
+        guard let button = statusItem.button, let window = button.window else { return false }
+        let rectInWindow = button.convert(button.bounds, to: nil)
+        let rectOnScreen = window.convertToScreen(rectInWindow)
+        let expandedRect = rectOnScreen.insetBy(dx: -4, dy: -4)
+        return expandedRect.contains(NSEvent.mouseLocation)
     }
     
     /// Ensures popover floats on top of other applications, including native macOS Fullscreen Spaces
@@ -243,22 +332,19 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     
     @objc private func customizeBentoAction() {
         UIState.shared.isEditBentoLayoutMode = true
-        if let button = statusItem.button, !popover.isShown {
-            collector.setPopoverVisibility(true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            configurePopoverWindow()
+        if !popover.isShown {
+            showPopover()
         }
     }
     
     @objc private func openInspectorWindowAction() {
+        closePopover()
         WindowManager.shared.openWindow(tab: .dashboard)
     }
     
     @objc private func openDashboardAction() {
-        if let button = statusItem.button, !popover.isShown {
-            collector.setPopoverVisibility(true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            configurePopoverWindow()
+        if !popover.isShown {
+            showPopover()
         }
     }
     
