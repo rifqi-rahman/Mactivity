@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Combine
 
 @MainActor
 public class MenuBarController: NSObject, NSPopoverDelegate {
@@ -7,6 +8,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     private var popover: NSPopover!
     private var collector: MetricsCollector
     private var updateTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
     
     public init(collector: MetricsCollector) {
         self.collector = collector
@@ -21,8 +23,9 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     }
     
     private func setupStatusItem() {
-        // Dynamic variable length allows smooth adaptation to whichever metric the user selects!
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Fixed length per mode guarantees that the status item NEVER shifts on periodic timer updates!
+        let initialLength = UIState.shared.menuBarMetricMode.statusItemLength
+        statusItem = NSStatusBar.system.statusItem(withLength: initialLength)
         
         if let button = statusItem.button {
             button.target = self
@@ -30,6 +33,16 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             updateStatusItemTitle()
         }
+        
+        // Update width ONLY when user explicitly changes metric mode
+        UIState.shared.$menuBarMetricMode
+            .receive(on: RunLoop.main)
+            .sink { [weak self] newMode in
+                guard let self = self else { return }
+                self.statusItem.length = newMode.statusItemLength
+                self.updateStatusItemTitle()
+            }
+            .store(in: &cancellables)
     }
     
     private func setupPopover() {

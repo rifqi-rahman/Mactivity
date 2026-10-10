@@ -40,6 +40,21 @@ public enum MenuBarMetricMode: String, CaseIterable, Identifiable {
         case .iconOnly: return "gauge.with.needle.fill"
         }
     }
+    
+    // Fixed widths guarantee that the menu bar item NEVER shifts or resizes on timer ticks, eliminating popup jitter!
+    public var statusItemLength: CGFloat {
+        switch self {
+        case .iconOnly: return 28.0
+        case .cpuOnly: return 64.0
+        case .temperature: return 68.0
+        case .battery: return 82.0
+        case .memoryOnly: return 94.0
+        case .cpuAndMemory: return 108.0
+        case .cpuAndNetwork: return 116.0
+        case .networkOnly: return 126.0
+        case .compactAll: return 176.0
+        }
+    }
 }
 
 public enum BentoCardID: String, CaseIterable, Identifiable, Codable {
