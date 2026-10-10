@@ -320,30 +320,17 @@ public struct BluetoothCardView: View {
             title: "Bluetooth Devices",
             icon: "headphones",
             targetTab: .battery,
-            unitDetail: "Bluetooth 5.3 · Peripherals Active",
-            badge: "BT 5.3",
+            unitDetail: "Bluetooth 5.3 · Active Peripherals",
+            badge: nil,
             height: 150
         ) { isHovered in
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    ForEach(devices.prefix(4)) { dev in
-                        BatteryPillarView(peripheral: dev)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(height: 52)
-                
-                if !isHovered {
-                    HStack(spacing: 8) {
-                        ForEach(devices.prefix(4)) { dev in
-                            Text(dev.batteryLevel != nil ? "\(dev.batteryLevel!)%" : "—")
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                .foregroundColor(dev.isConnected ? .primary : .secondary.opacity(0.5))
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
+            HStack(spacing: 8) {
+                ForEach(devices.prefix(4)) { dev in
+                    BatteryPillarView(peripheral: dev, height: 60)
+                        .frame(maxWidth: .infinity)
                 }
             }
+            .padding(.top, 4)
         }
     }
 }

@@ -255,58 +255,68 @@ public struct ThermometerView: View {
 
 public struct BatteryPillarView: View {
     public var peripheral: BluetoothPeripheral
+    public var height: CGFloat
     
-    public init(peripheral: BluetoothPeripheral) {
+    public init(peripheral: BluetoothPeripheral, height: CGFloat = 60) {
         self.peripheral = peripheral
+        self.height = height
     }
     
     public var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 5) {
             ZStack(alignment: .bottom) {
-                // Container Box
-                RoundedRectangle(cornerRadius: 8)
+                // Background Track
+                RoundedRectangle(cornerRadius: 10)
                     .fill(Color.primary.opacity(0.05))
-                    .frame(height: 72)
+                    .frame(height: height)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.primary.opacity(0.08), lineWidth: 1)
                     )
                 
                 if peripheral.isConnected, let battery = peripheral.batteryLevel {
                     // Liquid Fill Level
-                    let fillHeight = CGFloat(72 * (Double(battery) / 100.0))
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(red: 0.42, green: 0.45, blue: 0.95))
+                    let fillRatio = max(0.20, min(1.0, Double(battery) / 100.0))
+                    let fillHeight = CGFloat(Double(height) * fillRatio)
+                    
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(red: 0.38, green: 0.45, blue: 0.98), Color(red: 0.48, green: 0.38, blue: 0.98)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                         .frame(height: fillHeight)
-                        .animation(.easeInOut, value: battery)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     
                     // Peripheral Icon
                     VStack {
                         Spacer()
                         peripheralGlyph(for: peripheral.type)
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.white)
-                            .padding(.bottom, 10)
+                            .padding(.bottom, 6)
                     }
                 } else {
                     // Diagonal hatched placeholder for empty slot
                     HatchedPlaceholderShape()
-                        .stroke(Color.primary.opacity(0.12), lineWidth: 1)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .frame(height: 72)
+                        .stroke(Color.primary.opacity(0.10), lineWidth: 1)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .frame(height: height)
                 }
             }
-            .frame(height: 72)
+            .frame(height: height)
             
-            // Text Label
+            // Single, Clean Text Label
             if peripheral.isConnected, let battery = peripheral.batteryLevel {
                 Text("\(battery)%")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundColor(.primary)
             } else {
                 Text("—")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundColor(Color.secondary.opacity(0.4))
             }
         }
     }
