@@ -24,21 +24,21 @@ Through deep analysis of the utility space and user experience, Mactivity distin
 
 ---
 
-## 3. Hardware Target: MacBook Pro (M4 Pro Architecture)
+## 3. Hardware Target: Universal macOS Architecture (Dynamic Hardware Detection)
 
-MacUsage is tuned for the **MacBook Pro M4 Pro** specifications:
-- **CPU Architecture**: 12-core or 14-core CPU (up to 10 Performance cores + 4 Efficiency cores).
-- **GPU Architecture**: 16-core or 20-core GPU with hardware-accelerated ray tracing and dynamic caching.
-- **Unified Memory**: 24 GB / 48 GB Unified LPDDR5X Memory (273 GB/s bandwidth).
-- **Thermal Design**: Dual-fan active cooling system with multi-sensor thermal envelope.
-- **Storage**: High-speed NVMe internal storage + Thunderbolt 5 external expansion ports.
-- **Wireless & Connectivity**: Wi-Fi 6E/7, Bluetooth 5.3, high-speed Gigabit Ethernet support.
+Mactivity is engineered with dynamic kernel and IOKit hardware detection to support **all macOS devices** (MacBook Pro, MacBook Air, Mac mini, Mac Studio, iMac, Mac Pro, and Intel Macs) with verified first-class optimization for the **MacBook Pro M4 Pro** reference device:
+- **CPU Architecture**: Dynamically probes Performance (P-Cores) and Efficiency (E-Cores) clusters or symmetric Intel cores without hardcoding core counts.
+- **GPU Architecture**: Queries Metal subsystem and hardware registers for physical GPU cores (e.g. 10, 16, 20, 24..76 cores) and shared VRAM.
+- **Unified Memory**: Real-time physical RAM probing with dynamic system page sizes (`getpagesize()` supporting 16KB ARM64 and 4KB Intel).
+- **Thermal & Acoustic Profiles**: Dynamic awareness of **Fanless passive cooling** (MacBook Air, 0 dB), **Single blower** (Mac mini, iMac), **Dual blowers** (MacBook Pro, Mac Studio), and **Multi-fan** systems (Mac Pro).
+- **Power Subsystem**: Seamless differentiation between internal laptop smart battery telemetry (cycles, health, wattage) and desktop Direct AC mains power architecture.
+- **Storage & Peripherals**: NVMe APFS containers, removable external Thunderbolt/USB volumes, and genuine Bluetooth BLE peripheral battery levels.
 
 ---
 
 ## 4. Feature Specifications & Monitored Modules
 
-MacUsage satisfies all requested monitoring capabilities across 11 dedicated functional modules:
+Mactivity satisfies all requested monitoring capabilities across 11 dedicated functional modules:
 
 ### 4.1. Processor (CPU)
 - **Real-time CPU Utilization (%)**: Combined overall processor load updated every 1.0s.
@@ -110,18 +110,20 @@ MacUsage satisfies all requested monitoring capabilities across 11 dedicated fun
 
 ## 5. UI/UX & Design System Specifications
 
-### 5.1. Visual Style & Tokens
-- **Background**: Translucent frosted glass backing using macOS `.ultraThinMaterial` (`NSVisualEffectView`).
-- **Color Palette**:
-  - Primary Accent: Electric Blue (`#3B82F6` / `rgb(59, 130, 246)`).
-  - Secondary Accent: Vivid Indigo (`#6366F1` / `rgb(99, 102, 241)`).
-  - Network In / Down: Vivid Fuchsia / Rose (`#EC4899` / `#F43F5E`).
-  - Network Out / Up: Deep Purple (`#8B5CF6`).
-  - Success / Normal: Apple Emerald (`#10B981`).
-  - Warning: Warm Amber (`#F59E0B`).
-  - Danger / Critical: Coral Red (`#EF4444`).
+### 5.1. Signature Architectural Color Palette & Design System
+Mactivity utilizes a bespoke architectural Nordic Terracotta & Midnight Teal palette designed to stand distinct from generic neon utility monitors:
+
+| Token Name | Hex Code | RGB | Purpose & Semantic Role |
+| :--- | :--- | :--- | :--- |
+| **Midnight Petrol** | `#0F3040` | `rgb(15, 48, 64)` | Deep canvas background, card backing, container fill, active tab pill background |
+| **Muted Slate** | `#464858` | `rgb(70, 72, 88)` | Structural card borders, dividers, track bases, inactive glyphs, subtle outlines |
+| **Terracotta Copper** | `#A56F63` | `rgb(165, 111, 99)` | System CPU utilization, upload throughput (↑), wired memory segment, warning thermals |
+| **Warm Sand Peach** | `#D99B7F` | `rgb(217, 155, 127)` | User CPU utilization, download throughput (↓), app memory segment, active accents, primary badges |
+
+- **Background Styling**: Frosted glass backing using native macOS `NSVisualEffectView` (`.behindWindow` blending, `.popover` material) layered with `MactivityTheme.petrol.opacity(0.40)`.
+- **Card Styling**: 16pt corner radius, `MactivityTheme.cardBg` (`#0F3040` @ 90% opacity), `0.8pt` border stroke with `MactivityTheme.slate`, and warm sand hover glow effects (`#D99B7F` @ 20% shadow opacity).
 - **Typography**: Apple San Francisco (`SF Pro Display` / `SF Pro Text`) with tabular figures (`.monospacedDigit()`) to prevent jittering during live stat updates.
-- **Corner Radii**: Cards have 16pt corner radius with subtle 0.5pt border strokes (`rgba(255, 255, 255, 0.1)` in dark mode).
+- **Micro-Visuals**: Mirrored dual-tone bandwidth waves, radial tick gauges, multi-segment donut rings, fluid thermometers, and vertical peripheral battery pillars.
 
 ### 5.2. Menu Bar Presence
 - **Placement**: Native `NSStatusItem` in the macOS system status bar (adjacent to Battery, Control Center, and Clock).

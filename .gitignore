@@ -1,9 +1,39 @@
+# macOS System Files
 .DS_Store
+.AppleDouble
+.LSOverride
+Icon\r
+._*
+.Spotlight-V100
+.Trashes
+
+# Build Artifacts & Compiled Binaries
 /.build
 /build
+*.app
+*.dSYM
+*.o
+*.a
+*.dylib
+
+# Swift Package Manager & Xcode
 /Packages
 xcuserdata/
 DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+*.xcuserstate
+*.xcbkptlist
+
+# Local Logs & Diagnostics
+*.log
+.tempmediaStorage/
+scratch/
+.system_generated/
 .netrc
+
+# Editor & IDE Configs
+.vscode/
+.idea/
+*.swp
+*~
