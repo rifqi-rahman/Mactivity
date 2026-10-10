@@ -34,35 +34,22 @@ function initClock() {
 }
 
 /* ==========================================================================
-   2. INTERACTIVE MENU BAR PILL & BENTO POPOVER TOGGLE
+   2. INTERACTIVE MENU BAR PILL & BENTO POPOVER SIMULATOR
    ========================================================================== */
 function initMenuBarPillToggle() {
   const pillBtn = document.getElementById('menuBarPill');
   const popover = document.getElementById('bentoPopover');
   if (!pillBtn || !popover) return;
 
+  // Always ensure Bento Popover is open and visible by default on the showcase webpage
+  popover.classList.remove('closed');
+  pillBtn.classList.add('active');
+
+  // Toggle only when the user explicitly clicks the status pill directly
   pillBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const isClosed = popover.classList.toggle('closed');
     pillBtn.classList.toggle('active', !isClosed);
-  });
-
-  // Click outside to dismiss (matching native macOS behavior)
-  document.addEventListener('click', (e) => {
-    if (!popover.contains(e.target) && !pillBtn.contains(e.target)) {
-      if (!popover.classList.contains('closed')) {
-        popover.classList.add('closed');
-        pillBtn.classList.remove('active');
-      }
-    }
-  });
-
-  // ESC key to dismiss
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !popover.classList.contains('closed')) {
-      popover.classList.add('closed');
-      pillBtn.classList.remove('active');
-    }
   });
 }
 
