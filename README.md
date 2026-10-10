@@ -8,11 +8,11 @@
 *Engineered with Swift 6 & SwiftUI · Direct Mach Kernel Telemetry · Zero Mock Data · Architectural Bento Grid*
 
 <p align="center">
-  <a href="https://rifqirahman.github.io/Mactivity/"><img src="https://img.shields.io/badge/Live%20Website-Mactivity%20Showcase-D99B7F?style=for-the-badge&logo=safari&logoColor=black" alt="Live Website" /></a>
-  <a href="#-key-features"><img src="https://img.shields.io/badge/Platform-macOS%2014.0%2B%20(Sonoma%20%7C%20Sequoia)-0F3040?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" /></a>
+  <a href="https://github.com/rifqi-rahman/Mactivity/releases"><img src="https://img.shields.io/badge/Download-.DMG%20Installer-D99B7F?style=for-the-badge&logo=apple&logoColor=white" alt="Download DMG" /></a>
+  <a href="https://rifqi-rahman.github.io/Mactivity/"><img src="https://img.shields.io/badge/Live%20Website-Mactivity%20Showcase-0F3040?style=for-the-badge&logo=safari&logoColor=white" alt="Live Website" /></a>
+  <a href="#-getting-started"><img src="https://img.shields.io/badge/Platform-macOS%2014.0%2B%20(Sonoma%20%7C%20Sequoia)-464858?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="#-universal-mac-hardware-intelligence"><img src="https://img.shields.io/badge/Architecture-Apple%20Silicon%20(M1--M4)%20%26%20Intel-A56F63?style=for-the-badge&logo=apple&logoColor=white" alt="Apple Silicon & Intel" /></a>
   <a href="#-tech-stack--performance"><img src="https://img.shields.io/badge/Language-Swift%206.0%20%7C%20SwiftUI-D99B7F?style=for-the-badge&logo=swift&logoColor=white" alt="Swift 6" /></a>
-  <a href="#-tech-stack--performance"><img src="https://img.shields.io/badge/RAM%20Footprint-~20%20MB%20%7C%20%3C0.3%25%20CPU-464858?style=for-the-badge&logo=speedtest&logoColor=white" alt="Lightweight" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0F3040?style=for-the-badge" alt="MIT License" /></a>
 </p>
 
@@ -133,38 +133,60 @@ Mactivity is styled with a bespoke **Nordic Architectural Palette**, delivering 
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting Started & Installation
 
-### Prerequisites
+### Option A: Direct Download (Recommended for General Users)
+
+If you want to download and run Mactivity immediately without using Terminal or installing Xcode tools:
+
+1. **Download the latest release**:
+   * [**Download Mactivity.dmg**](https://github.com/rifqi-rahman/Mactivity/releases/latest/download/Mactivity.dmg) — Official macOS Disk Image with `/Applications` drag-and-drop installer (~4.4 MB).
+   * [**Download Mactivity.zip**](https://github.com/rifqi-rahman/Mactivity/releases/latest/download/Mactivity.zip) — Standalone compressed application archive (~4.0 MB).
+   * Or view all release tags and SHA-256 checksums on [GitHub Releases](https://github.com/rifqi-rahman/Mactivity/releases).
+2. **Install to Applications**:
+   * Double-click `Mactivity.dmg` and drag the **Mactivity** icon into your **Applications** shortcut.
+3. **Launch Mactivity**:
+   * Open Mactivity from Spotlight (`⌘ + Space`) or Launchpad. The live status pill will instantly appear in your menu bar.
+
+> [!TIP]
+> **First-Time Launch (macOS Gatekeeper)**:  
+> Because Mactivity is a free, independent open-source project and is not signed with an annual $99 Apple Developer subscription, macOS may display an *"Unidentified Developer"* alert on the first launch.  
+> **How to open:** Simply **Right-Click (or Control + Click) `Mactivity.app` in `/Applications` > select "Open" > click "Open"** in the confirmation dialog. You only need to do this once.
+
+---
+
+### Option B: Build from Source (For Developers)
+
+#### Prerequisites
 * macOS 14.0 (Sonoma) or macOS 15.0+ (Sequoia)
 * Apple Silicon (M1, M2, M3, M4) or Intel 64-bit Mac
 * Xcode 15+ Command Line Tools (`xcode-select --install`)
 
-### 1. Clone the Repository
+#### 1. Clone the Repository
 ```bash
-git clone https://github.com/rifqirahman/Mactivity.git
+git clone https://github.com/rifqi-rahman/Mactivity.git
 cd Mactivity
 ```
 
-### 2. Build the Native App Bundle
+#### 2. Build the Native App Bundle
 Run the automated build script:
 ```bash
 chmod +x build.sh
 ./build.sh
 ```
-This compiles the native binary with `-O -whole-module-optimization` and generates `build/Mactivity.app` complete with high-resolution app icons and LaunchServices registration.
+*(To build and package into `.dmg` and `.zip`, run `./build.sh --package` or `./scripts/package-release.sh`)*
 
-### 3. Launch Mactivity
+#### 3. Launch Mactivity
 ```bash
 open build/Mactivity.app
 ```
 *The Mactivity icon will immediately appear in your menu bar.*
 
-### 4. Configure Launch at Login (Recommended)
+#### 4. Configure Launch at Login (Recommended)
 To keep Mactivity active across system restarts:
 1. Open **System Settings** > **General** > **Login Items**.
 2. Under **Open at Login**, click the **`+`** button.
-3. Select `Mactivity.app` from your repository's `build/` folder (or copy it to `/Applications`).
+3. Select `Mactivity.app` from `/Applications` (or your repository's `build/` folder).
 
 ---
 
@@ -228,7 +250,7 @@ Mactivity/
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!  
-Feel free to check out the [issues page](https://github.com/rifqirahman/Mactivity/issues) if you want to contribute or submit a pull request.
+Feel free to check out the [issues page](https://github.com/rifqi-rahman/Mactivity/issues) if you want to contribute or submit a pull request.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -245,5 +267,5 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more informa
 ---
 
 <div align="center">
-  <sub>Crafted with passion for macOS and Apple Silicon by <a href="https://github.com/rifqirahman">Rifqi Rahman</a>.</sub>
+  <sub>Crafted with passion for macOS and Apple Silicon by <a href="https://github.com/rifqi-rahman">Rifqi Rahman</a>.</sub>
 </div>

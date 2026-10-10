@@ -246,6 +246,48 @@ a {
   transform: translateY(-2px);
 }
 
+.btn-nav-download {
+  background: rgba(217, 155, 127, 0.15);
+  border: 1px solid rgba(217, 155, 127, 0.4);
+  color: var(--color-sand);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.95rem;
+}
+
+.btn-nav-download:hover {
+  background: var(--color-sand);
+  color: #120905;
+  border-color: var(--color-sand);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--color-sand-glow);
+}
+
+.btn-hero-download {
+  padding: 0.85rem 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: left;
+}
+
+.btn-hero-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.btn-hero-main {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.btn-hero-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 /* ==========================================================================
    HERO SECTION
    ========================================================================== */
@@ -1256,11 +1298,325 @@ a {
 }
 
 /* ==========================================================================
-   TERMINAL & QUICKSTART SECTION
+   DOWNLOAD & QUICKSTART HUB
    ========================================================================== */
 
 .get-started-section {
   padding-bottom: 6rem;
+}
+
+/* Mode Switcher Tabs */
+.install-mode-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.install-tab-btn {
+  background: rgba(15, 48, 64, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.65rem 1.35rem;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  transition: all 0.25s var(--ease-snappy);
+}
+
+.install-tab-btn:hover {
+  background: rgba(15, 48, 64, 0.7);
+  color: var(--color-text-main);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.install-tab-btn.active {
+  background: rgba(217, 155, 127, 0.15);
+  border-color: var(--color-sand);
+  color: var(--color-sand);
+  box-shadow: 0 4px 18px rgba(217, 155, 127, 0.15);
+}
+
+.tab-badge {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  background: rgba(217, 155, 127, 0.25);
+  color: var(--color-sand);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+  animation: fadeInPane 0.3s ease-out;
+}
+
+@keyframes fadeInPane {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Download Cards Grid */
+.download-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 960px;
+  margin: 0 auto 3rem;
+}
+
+.download-card {
+  background: var(--card-glass-bg);
+  border: 1px solid var(--card-glass-border);
+  border-radius: 20px;
+  padding: 2rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s var(--ease-snappy), border-color 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: var(--card-shadow);
+  text-align: left;
+}
+
+.download-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--card-glass-border-hover);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.download-card.primary-card {
+  border-color: rgba(217, 155, 127, 0.4);
+  background: linear-gradient(180deg, rgba(217, 155, 127, 0.06) 0%, rgba(15, 48, 64, 0.5) 100%);
+  box-shadow: 0 16px 36px -8px rgba(217, 155, 127, 0.15);
+}
+
+.download-card.primary-card:hover {
+  border-color: var(--color-sand);
+  box-shadow: 0 24px 48px -10px rgba(217, 155, 127, 0.25);
+}
+
+.dl-card-badge {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(217, 155, 127, 0.18);
+  color: var(--color-sand);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(217, 155, 127, 0.3);
+}
+
+.dl-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dl-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: rgba(217, 155, 127, 0.12);
+  border: 1px solid rgba(217, 155, 127, 0.25);
+  color: var(--color-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dl-card-headings {
+  display: flex;
+  flex-direction: column;
+}
+
+.dl-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 0.2rem;
+}
+
+.dl-filename {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-sand);
+}
+
+.dl-card-desc {
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+.dl-specs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.spec-pill {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--color-text-muted);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+}
+
+.dl-action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.btn-dl-main {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+
+.dl-alt-link {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.dl-alt-link:hover {
+  color: var(--color-sand);
+  text-decoration: underline;
+}
+
+/* 3-Step Setup Guide */
+.install-steps-container {
+  max-width: 960px;
+  margin: 0 auto 2.5rem;
+  text-align: left;
+}
+
+.steps-heading {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 1.25rem;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+.step-card {
+  background: rgba(15, 48, 64, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.35rem;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.step-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(217, 155, 127, 0.3);
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(217, 155, 127, 0.15);
+  color: var(--color-sand);
+  border: 1px solid rgba(217, 155, 127, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-bottom: 0.85rem;
+}
+
+.step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 0.4rem;
+}
+
+.step-desc {
+  font-size: 0.84rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Gatekeeper Tip Card */
+.gatekeeper-tip-card {
+  max-width: 960px;
+  margin: 0 auto 3rem;
+  background: rgba(165, 111, 99, 0.12);
+  border: 1px solid rgba(165, 111, 99, 0.35);
+  border-radius: 16px;
+  padding: 1.35rem 1.65rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  text-align: left;
+}
+
+.gk-icon {
+  color: var(--color-sand);
+  background: rgba(217, 155, 127, 0.15);
+  padding: 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgba(217, 155, 127, 0.25);
+  flex-shrink: 0;
+}
+
+.gk-content {
+  flex-grow: 1;
+}
+
+.gk-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-sand);
+  margin-bottom: 0.45rem;
+}
+
+.gk-desc {
+  font-size: 0.86rem;
+  color: #d1d5db;
+  line-height: 1.6;
+}
+
+.gk-desc strong {
+  color: #fff;
 }
 
 .terminal-card {
@@ -1468,6 +1824,16 @@ a {
   }
   .palette-grid {
     grid-template-columns: 1fr;
+  }
+  .download-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+  .gatekeeper-tip-card {
+    flex-direction: column;
+    gap: 0.85rem;
   }
   .footer-container {
     flex-direction: column;

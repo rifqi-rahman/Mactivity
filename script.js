@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHardwareSwitcher();
   initLiveTelemetryCanvases();
   initCopyButton();
+  initDownloadTabs();
 });
 
 /* ==========================================================================
@@ -346,7 +347,7 @@ function initCopyButton() {
   const text = document.getElementById('copyBtnText');
   if (!btn || !text) return;
 
-  const cmd = `git clone https://github.com/rifqirahman/Mactivity.git && cd Mactivity && ./build.sh && open build/Mactivity.app`;
+  const cmd = `git clone https://github.com/rifqi-rahman/Mactivity.git && cd Mactivity && ./build.sh && open build/Mactivity.app`;
 
   btn.addEventListener('click', async () => {
     try {
@@ -373,5 +374,30 @@ function initCopyButton() {
     } catch (err) {
       console.warn('Clipboard write failed:', err);
     }
+  });
+}
+
+/* ==========================================================================
+   7. INSTALLATION MODE TAB SWITCHER (USERS VS DEVELOPERS)
+   ========================================================================== */
+function initDownloadTabs() {
+  const tabBtns = document.querySelectorAll('.install-tab-btn');
+  const tabPanes = document.querySelectorAll('.tab-pane');
+  if (!tabBtns.length) return;
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-tab');
+      tabBtns.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      tabPanes.forEach(p => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      const targetPane = document.getElementById(targetId);
+      if (targetPane) targetPane.classList.add('active');
+    });
   });
 }
