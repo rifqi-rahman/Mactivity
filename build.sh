@@ -39,11 +39,23 @@ swiftc -parse-as-library -module-cache-path ".build/ModuleCache" \
 cp Resources/Info.plist "$CONTENTS/Info.plist"
 if [ -f "Resources/AppIcon.icns" ]; then
   cp Resources/AppIcon.icns "$RESOURCES_DIR/AppIcon.icns"
+  cp Resources/AppIcon.icns "$RESOURCES_DIR/AppIcon"
 fi
 if [ -f "Mactivity.icon/Mactivity-iOS-Default-1024@1x.png" ]; then
   cp "Mactivity.icon/Mactivity-iOS-Default-1024@1x.png" "$RESOURCES_DIR/AppIcon.png"
 fi
 echo -n "APPL????" > "$CONTENTS/PkgInfo"
+
+if [ -f "Resources/AppIcon.icns" ]; then
+  swiftc -module-cache-path ".build/ModuleCache" -target arm64-apple-macosx14.0 -e 'import AppKit
+  if let img = NSImage(contentsOfFile: "Resources/AppIcon.icns") {
+      _ = NSWorkspace.shared.setIcon(img, forFile: "'"$APP_BUNDLE"'", options: [])
+  }' -o .build/set_icon_temp && .build/set_icon_temp >/dev/null 2>&1 || true
+fi
+
+touch "$APP_BUNDLE"
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP_BUNDLE" >/dev/null 2>&1 || true
+mdimport "$APP_BUNDLE" >/dev/null 2>&1 || true
 
 echo "==> Successfully created $APP_BUNDLE"
 echo "==> Binary architecture:"

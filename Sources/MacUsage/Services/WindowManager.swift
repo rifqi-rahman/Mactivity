@@ -11,10 +11,26 @@ public class WindowManager: NSObject, NSWindowDelegate {
         super.init()
     }
     
+    public var isWindowVisible: Bool {
+        guard let win = detailWindow else { return false }
+        return win.isVisible && !win.isMiniaturized
+    }
+    
     public func openWindow(tab: InspectorTab = .dashboard) {
         UIState.shared.selectedInspectorTab = tab
         
+        // Ensure dock tile is updated with application icon
+        if let icon = NSApp.applicationIconImage {
+            let iv = NSImageView(frame: NSRect(origin: .zero, size: NSApp.dockTile.size))
+            iv.image = icon
+            NSApp.dockTile.contentView = iv
+            NSApp.dockTile.display()
+        }
+        
         if let win = detailWindow {
+            if win.isMiniaturized {
+                win.deminiaturize(nil)
+            }
             NSApp.setActivationPolicy(.regular)
             win.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)

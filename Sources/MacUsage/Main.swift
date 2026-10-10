@@ -6,8 +6,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var menuBarController: MenuBarController?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
-        
         if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns") ?? Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
            let iconImg = NSImage(contentsOf: iconURL) {
             NSApp.applicationIconImage = iconImg
@@ -15,6 +13,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         menuBarController = MenuBarController(collector: MetricsCollector.shared)
         print("Mactivity started successfully on \(MetricsCollector.shared.cpu.machineName) (\(MetricsCollector.shared.cpu.chipName))")
+        
+        let isBackground = CommandLine.arguments.contains("--background") || CommandLine.arguments.contains("--daemon")
+        if isBackground {
+            NSApp.setActivationPolicy(.accessory)
+        } else {
+            WindowManager.shared.openWindow(tab: .dashboard)
+        }
+    }
+    
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        WindowManager.shared.openWindow(tab: .dashboard)
+        return true
+    }
+    
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if !WindowManager.shared.isWindowVisible {
+            WindowManager.shared.openWindow(tab: .dashboard)
+        }
     }
 }
 
