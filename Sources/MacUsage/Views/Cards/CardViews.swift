@@ -43,49 +43,53 @@ public struct BentoCardContainer<Content: View>: View {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(isHovered ? .blue : .secondary)
+                    .foregroundColor(isHovered ? MactivityTheme.sand : MactivityTheme.sand.opacity(0.80))
                 
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(isHovered ? .primary : .secondary)
+                    .foregroundColor(isHovered ? .white : Color(white: 0.90))
                     .lineLimit(1)
                 
                 Spacer()
                 
                 if let badge = badge {
                     Text(badge)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(MactivityTheme.sand)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.primary.opacity(0.06))
+                        .background(MactivityTheme.slate.opacity(0.40))
                         .cornerRadius(4)
                 }
                 
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(isHovered ? .blue : Color.secondary.opacity(0.6))
+                    .foregroundColor(isHovered ? MactivityTheme.sand : MactivityTheme.slate)
                     .scaleEffect(isHovered ? 1.15 : 1.0)
             }
             
             // Content
             content(isHovered)
             
-            // Hover Unit Detail Banner
+            // Hover Unit Detail Banner (#0F3040 background with #D99B7F accent)
             if isHovered, let unit = unitDetail {
                 HStack(spacing: 4) {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 9))
-                        .foregroundColor(.blue)
+                        .foregroundColor(MactivityTheme.sand)
                     Text(unit)
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.primary)
+                        .foregroundColor(MactivityTheme.sand)
                         .lineLimit(1)
                     Spacer()
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(Color.blue.opacity(0.12))
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(MactivityTheme.petrol)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(MactivityTheme.sand.opacity(0.40), lineWidth: 0.8)
+                )
                 .cornerRadius(4)
             }
         }
@@ -99,7 +103,7 @@ public struct BentoCardContainer<Content: View>: View {
         .onTapGesture {
             WindowManager.shared.openWindow(tab: targetTab)
         }
-        .help("Click to inspect \(title) in Mac App")
+        .help("Click to inspect \(title) in Mactivity")
     }
 }
 
@@ -112,20 +116,20 @@ public struct BentoCardBackground: ViewModifier {
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(colorScheme == .dark
-                          ? (isHovered ? Color(white: 0.16) : Color(white: 0.11).opacity(0.92))
-                          : (isHovered ? Color(white: 0.98) : Color.white.opacity(0.92)))
+                          ? (isHovered ? MactivityTheme.cardHoverBg : MactivityTheme.cardBg)
+                          : (isHovered ? Color(white: 0.98) : Color.white.opacity(0.94)))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(
                         isHovered
-                        ? Color.blue.opacity(0.45)
-                        : (colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)),
+                        ? MactivityTheme.cardBorderHover
+                        : (colorScheme == .dark ? MactivityTheme.cardBorder : Color.black.opacity(0.08)),
                         lineWidth: isHovered ? 1.5 : 1.0
                     )
             )
             .shadow(
-                color: isHovered ? Color.blue.opacity(0.16) : Color.black.opacity(colorScheme == .dark ? 0.25 : 0.05),
+                color: isHovered ? MactivityTheme.sand.opacity(0.20) : Color.black.opacity(colorScheme == .dark ? 0.35 : 0.05),
                 radius: isHovered ? 8 : 4,
                 x: 0,
                 y: isHovered ? 3 : 2
@@ -153,7 +157,7 @@ public struct ProcessorCardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(String(format: "%.1f%%", cpu.totalUsage))
                     .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                    .foregroundColor(MactivityTheme.sand)
                 
                 HistoryBarChart(totalData: cpu.history, userPart: cpu.userHistory, barCount: 16)
                     .frame(height: 32)
@@ -161,17 +165,17 @@ public struct ProcessorCardView: View {
                 if !isHovered {
                     HStack {
                         HStack(spacing: 4) {
-                            Circle().fill(Color(red: 0.0, green: 0.75, blue: 1.0)).frame(width: 6, height: 6)
+                            Circle().fill(MactivityTheme.sand).frame(width: 6, height: 6)
                             Text(String(format: "User %.0f%%", cpu.userUsage))
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(Color(white: 0.75))
                         }
                         Spacer()
                         HStack(spacing: 4) {
-                            Circle().fill(Color(red: 0.45, green: 0.42, blue: 0.98)).frame(width: 6, height: 6)
+                            Circle().fill(MactivityTheme.copper).frame(width: 6, height: 6)
                             Text(String(format: "System %.0f%%", cpu.systemUsage))
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(Color(white: 0.75))
                         }
                     }
                 }
@@ -202,11 +206,11 @@ public struct MemoryCardView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(format: "%.1f%%", memory.usedPercent))
                             .font(.system(size: 26, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
+                            .foregroundColor(MactivityTheme.sand)
                         
                         Text(memory.usedGBString)
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                     }
                     
                     Spacer()
@@ -215,10 +219,11 @@ public struct MemoryCardView: View {
                     let wiredPct = Double(memory.wiredBytes) / Double(max(1, memory.totalBytes)) * 100.0
                     let compPct = Double(memory.compressedBytes) / Double(max(1, memory.totalBytes)) * 100.0
                     
+                    // Donut Chart with Mactivity Palette: Sand (App), Copper (Wired), Slate (Compressed)
                     DonutChartView(segments: [
-                        (appPct, Color(red: 0.20, green: 0.55, blue: 1.0)),
-                        (wiredPct, Color(red: 0.0, green: 0.80, blue: 0.95)),
-                        (compPct, Color(red: 0.50, green: 0.40, blue: 0.95))
+                        (appPct, MactivityTheme.sand),
+                        (wiredPct, MactivityTheme.copper),
+                        (compPct, MactivityTheme.slate)
                     ], lineWidth: 8)
                     .frame(width: 44, height: 44)
                 }
@@ -231,9 +236,10 @@ public struct MemoryCardView: View {
                             Text("\(memory.pressurePercent)%")
                                 .font(.system(size: 10, weight: .semibold, design: .rounded))
                         }
+                        .foregroundColor(MactivityTheme.sand)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.primary.opacity(0.06))
+                        .background(MactivityTheme.slate.opacity(0.35))
                         .cornerRadius(5)
                         
                         HStack(spacing: 3) {
@@ -242,9 +248,10 @@ public struct MemoryCardView: View {
                             Text(memory.swapUsedBytes == 0 ? "0 B" : "\(memory.swapUsedBytes / 1_048_576) MB")
                                 .font(.system(size: 10, weight: .semibold, design: .rounded))
                         }
+                        .foregroundColor(MactivityTheme.sand)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.primary.opacity(0.06))
+                        .background(MactivityTheme.slate.opacity(0.35))
                         .cornerRadius(5)
                     }
                 }
@@ -275,11 +282,11 @@ public struct DiskCardView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(format: "%.1f%%", disk.usedPercent))
                             .font(.system(size: 26, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
+                            .foregroundColor(MactivityTheme.sand)
                         
                         Text(disk.capacityString)
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                     }
                     
                     Spacer()
@@ -292,14 +299,15 @@ public struct DiskCardView: View {
                     HStack {
                         Text(disk.name)
                             .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(MactivityTheme.sand)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.primary.opacity(0.06))
+                            .background(MactivityTheme.slate.opacity(0.35))
                             .cornerRadius(5)
                         Spacer()
                         Text("\(String(format: "%.0f GB", Double(disk.availableBytes) / 1_073_741_824.0)) free")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.75))
                     }
                 }
             }
@@ -357,11 +365,11 @@ public struct TemperatureCardView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(Int(round(thermals.temperatureC)))°C")
                             .font(.system(size: 26, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
+                            .foregroundColor(MactivityTheme.sand)
                         
                         Text(String(format: "%.1f°F", thermals.temperatureF))
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                     }
                     
                     Spacer()
@@ -374,21 +382,21 @@ public struct TemperatureCardView: View {
                     HStack {
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(thermals.isThrottled ? Color.red : (thermals.temperatureC > 65 ? Color.orange : Color.green))
+                                .fill(thermals.isThrottled ? MactivityTheme.copper : (thermals.temperatureC > 65 ? MactivityTheme.copper : MactivityTheme.sand))
                                 .frame(width: 6, height: 6)
                             Text(thermals.status)
                                 .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Color(white: 0.85))
                         }
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.primary.opacity(0.06))
+                        .background(MactivityTheme.slate.opacity(0.35))
                         .cornerRadius(5)
                         
                         Spacer()
                         Text("TjMax 100°C")
                             .font(.system(size: 9))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.65))
                     }
                 }
             }
@@ -417,20 +425,20 @@ public struct FansCardView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(fans.leftRPM) RPM")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
+                        .foregroundColor(MactivityTheme.sand)
                     
                     Text(fans.status)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.70))
                 }
                 
-                // Speed Progress Curve
+                // Speed Progress Curve with Mactivity Gradient
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.primary.opacity(0.08)).frame(height: 5)
+                        Capsule().fill(MactivityTheme.slate.opacity(0.30)).frame(height: 5)
                         let ratio = min(1.0, Double(fans.leftRPM) / Double(max(1, fans.maxRPM)))
                         Capsule()
-                            .fill(LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing))
+                            .fill(MactivityTheme.horizontalWarm)
                             .frame(width: max(4, geo.size.width * CGFloat(ratio)), height: 5)
                     }
                 }
@@ -440,11 +448,11 @@ public struct FansCardView: View {
                     HStack {
                         Text("Left: \(fans.leftRPM) RPM")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                         Spacer()
                         Text("Right: \(fans.rightRPM) RPM")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                     }
                 }
             }
@@ -474,17 +482,19 @@ public struct NetworkCardView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "arrow.down")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(Color(red: 0.95, green: 0.25, blue: 0.55))
+                            .foregroundColor(MactivityTheme.sand)
                         Text(NetworkInfo.formatSpeed(network.downloadBytesPerSec))
                             .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(MactivityTheme.sand)
                     }
                     
                     HStack(spacing: 3) {
                         Image(systemName: "arrow.up")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(Color(red: 0.55, green: 0.40, blue: 0.95))
+                            .foregroundColor(MactivityTheme.copper)
                         Text(NetworkInfo.formatSpeed(network.uploadBytesPerSec))
                             .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(MactivityTheme.copper)
                     }
                 }
                 
@@ -495,12 +505,12 @@ public struct NetworkCardView: View {
                     HStack {
                         Text("LAN: \(network.localIP)")
                             .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                             .lineLimit(1)
                         Spacer()
                         Text("WAN: \(network.publicIP)")
                             .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                             .lineLimit(1)
                     }
                 }
@@ -529,30 +539,32 @@ public struct NetworkDataCardView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text("Today")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(white: 0.70))
                 
                 Text(NetworkInfo.formatDataVolume(network.dataTodayBytes))
                     .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                    .foregroundColor(MactivityTheme.sand)
                 
-                Divider().opacity(0.3)
+                Divider().opacity(0.2)
                 
                 if !isHovered {
                     HStack {
                         VStack(alignment: .leading, spacing: 1) {
                             Text("Last 7 days")
                                 .font(.system(size: 9))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Color(white: 0.65))
                             Text(NetworkInfo.formatDataVolume(network.data7DaysBytes))
                                 .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(MactivityTheme.sand)
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 1) {
                             Text("Last 30 days")
                                 .font(.system(size: 9))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Color(white: 0.65))
                             Text(NetworkInfo.formatDataVolume(network.data30DaysBytes))
                                 .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(MactivityTheme.copper)
                         }
                     }
                 }
@@ -581,9 +593,9 @@ public struct GPUCardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(String(format: "%.1f%%", gpu.utilizationPercent))
                     .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                    .foregroundColor(MactivityTheme.sand)
                 
-                // GPU Sparkline
+                // GPU Sparkline in Warm Sand
                 GeometryReader { geo in
                     let w = geo.size.width
                     let h = geo.size.height
@@ -597,7 +609,7 @@ public struct GPUCardView: View {
                             else { path.addLine(to: CGPoint(x: x, y: y)) }
                         }
                     }
-                    .stroke(Color.green, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                    .stroke(MactivityTheme.sand, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                 }
                 .frame(height: 28)
                 
@@ -605,11 +617,11 @@ public struct GPUCardView: View {
                     HStack {
                         Text("M4 Pro 20-Core GPU")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                         Spacer()
                         Text("VRAM \(String(format: "%.1f GB", Double(gpu.memoryUsedBytes) / 1_073_741_824.0))")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(MactivityTheme.copper)
                     }
                 }
             }
@@ -638,19 +650,19 @@ public struct BatteryCardView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(battery.percentage)%")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
+                        .foregroundColor(MactivityTheme.sand)
                     Spacer()
                     Text(battery.isCharging ? "Charging" : (battery.isACConnected ? "Power Adapter" : "On Battery"))
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.70))
                 }
                 
-                // Battery Progress Bar
+                // Battery Progress Bar in Warm Gradient
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.primary.opacity(0.08)).frame(height: 6)
+                        Capsule().fill(MactivityTheme.slate.opacity(0.30)).frame(height: 6)
                         Capsule()
-                            .fill(battery.percentage > 20 ? Color.green : Color.red)
+                            .fill(battery.percentage > 20 ? MactivityTheme.sand : MactivityTheme.copper)
                             .frame(width: max(4, geo.size.width * CGFloat(battery.percentage) / 100.0), height: 6)
                     }
                 }
@@ -660,11 +672,11 @@ public struct BatteryCardView: View {
                     HStack {
                         Text("Cycles: \(battery.cycleCount)")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                         Spacer()
                         Text("Temp: \(String(format: "%.0f°C", battery.temperatureC))")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.70))
                     }
                 }
             }
@@ -695,21 +707,22 @@ public struct VolumesCardView: View {
                         HStack {
                             Image(systemName: vol.isRemote ? "network" : (vol.isRemovable ? "externaldrive.fill" : "internaldrive.fill"))
                                 .font(.system(size: 10))
-                                .foregroundColor(vol.isRemote ? .purple : .blue)
+                                .foregroundColor(vol.isRemote ? MactivityTheme.copper : MactivityTheme.sand)
                             Text(vol.name)
                                 .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(Color(white: 0.88))
                                 .lineLimit(1)
                             Spacer()
                             Text("\(String(format: "%.0f GB", Double(vol.availableBytes) / 1_073_741_824.0)) free")
                                 .font(.system(size: 9))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Color(white: 0.70))
                         }
                         
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                Capsule().fill(Color.primary.opacity(0.08)).frame(height: 4)
+                                Capsule().fill(MactivityTheme.slate.opacity(0.30)).frame(height: 4)
                                 Capsule()
-                                    .fill(vol.isRemote ? Color.purple : Color.blue)
+                                    .fill(vol.isRemote ? MactivityTheme.copper : MactivityTheme.sand)
                                     .frame(width: max(4, geo.size.width * CGFloat(vol.usedPercent / 100.0)), height: 4)
                             }
                         }
@@ -720,7 +733,7 @@ public struct VolumesCardView: View {
                 if !isHovered {
                     Text("Mounted on /System/Volumes/Data")
                         .font(.system(size: 9))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.65))
                 }
             }
         }
@@ -747,20 +760,20 @@ public struct SystemArchCardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(cpu.chipName)
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                    .foregroundColor(MactivityTheme.sand)
                 
                 Text("10 Performance + 4 Efficiency Cores")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(white: 0.75))
                 
                 Text("16-Core Neural Engine (38 TOPS)")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.purple)
+                    .foregroundColor(MactivityTheme.copper)
                 
                 if !isHovered {
                     Text("273 GB/s Unified Memory Bus")
                         .font(.system(size: 9))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.65))
                 }
             }
         }
@@ -783,32 +796,32 @@ public struct ProcessesCardView: View {
         let isHovered = (uiState.hoveredCard == "Processes")
         
         VStack(alignment: .leading, spacing: 8) {
-            // Header with NO truncation: Plenty of space for Title, Badge, and Mode Picker
+            // Header with NO truncation
             HStack(spacing: 8) {
                 Image(systemName: "list.bullet.rectangle")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(isHovered ? .blue : .secondary)
+                    .foregroundColor(isHovered ? MactivityTheme.sand : MactivityTheme.sand.opacity(0.85))
                 
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Processes")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(isHovered ? .primary : .secondary)
+                        .foregroundColor(isHovered ? .white : Color(white: 0.90))
                     Text("Top Resource Consumers")
                         .font(.system(size: 10))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.65))
                 }
                 
                 Spacer()
                 
-                // Spacious Segmented Picker
+                // Spacious Segmented Picker in Mactivity Theme
                 HStack(spacing: 2) {
                     Button(action: { uiState.processMode = 0 }) {
                         Text("CPU")
                             .font(.system(size: 11, weight: uiState.processMode == 0 ? .bold : .medium))
-                            .foregroundColor(uiState.processMode == 0 ? .white : .primary)
+                            .foregroundColor(uiState.processMode == 0 ? MactivityTheme.petrol : Color(white: 0.85))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
-                            .background(uiState.processMode == 0 ? Color.blue : Color.clear)
+                            .background(uiState.processMode == 0 ? MactivityTheme.sand : Color.clear)
                             .cornerRadius(6)
                     }
                     .buttonStyle(.plain)
@@ -816,16 +829,17 @@ public struct ProcessesCardView: View {
                     Button(action: { uiState.processMode = 1 }) {
                         Text("Memory")
                             .font(.system(size: 11, weight: uiState.processMode == 1 ? .bold : .medium))
-                            .foregroundColor(uiState.processMode == 1 ? .white : .primary)
+                            .foregroundColor(uiState.processMode == 1 ? MactivityTheme.petrol : Color(white: 0.85))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
-                            .background(uiState.processMode == 1 ? Color.blue : Color.clear)
+                            .background(uiState.processMode == 1 ? MactivityTheme.sand : Color.clear)
                             .cornerRadius(6)
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(2)
-                .background(Color.primary.opacity(0.06))
+                .background(MactivityTheme.petrol.opacity(0.60))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(MactivityTheme.slate.opacity(0.40), lineWidth: 0.8))
                 .cornerRadius(8)
                 
                 Button(action: {
@@ -833,13 +847,13 @@ public struct ProcessesCardView: View {
                 }) {
                     Image(systemName: "arrow.up.right")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(isHovered ? .blue : .secondary)
+                        .foregroundColor(isHovered ? MactivityTheme.sand : MactivityTheme.slate)
                 }
                 .buttonStyle(.plain)
-                .help("Open Full Process Inspector App")
+                .help("Open Full Process Inspector in Mactivity")
             }
             
-            Divider().opacity(0.4)
+            Divider().opacity(0.25)
             
             // Process List Rows
             let list = uiState.processMode == 0 ? topCPU : topMem
@@ -848,34 +862,34 @@ public struct ProcessesCardView: View {
                     HStack(spacing: 8) {
                         Image(systemName: item.isSystem ? "gearshape.2" : "app.fill")
                             .font(.system(size: 11))
-                            .foregroundColor(item.isSystem ? .secondary : .blue)
+                            .foregroundColor(item.isSystem ? MactivityTheme.slate : MactivityTheme.sand)
                             .frame(width: 14)
                         
                         Text(item.name)
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.primary)
+                            .foregroundColor(Color(white: 0.90))
                             .lineLimit(1)
                             .frame(maxWidth: 220, alignment: .leading)
                         
                         Text("PID \(item.pid)")
                             .font(.system(size: 9, design: .monospaced))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(MactivityTheme.sand.opacity(0.80))
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)
-                            .background(Color.primary.opacity(0.05))
+                            .background(MactivityTheme.slate.opacity(0.35))
                             .cornerRadius(4)
                         
                         Text("\(item.threadsCount) thr")
                             .font(.system(size: 9, design: .monospaced))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color(white: 0.60))
                         
                         Spacer()
                         
                         Text(uiState.processMode == 0 ? String(format: "%.1f%%", item.cpuPercent) : item.memoryString)
                             .font(.system(size: 12, weight: .bold, design: .monospaced))
                             .foregroundColor(uiState.processMode == 0
-                                             ? (item.cpuPercent > 30.0 ? .red : (item.cpuPercent > 15.0 ? .orange : .primary))
-                                             : .primary)
+                                             ? (item.cpuPercent > 30.0 ? MactivityTheme.copper : (item.cpuPercent > 15.0 ? MactivityTheme.sand : Color(white: 0.85)))
+                                             : MactivityTheme.sand)
                     }
                     .padding(.vertical, 2)
                     .contentShape(Rectangle())
@@ -885,7 +899,7 @@ public struct ProcessesCardView: View {
                 }
             }
             
-            Divider().opacity(0.4)
+            Divider().opacity(0.25)
             
             // Bottom Action Bar
             HStack {
@@ -894,10 +908,10 @@ public struct ProcessesCardView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.up.forward.app")
-                        Text("Open Detailed Inspector in Mac App")
+                        Text("Open Detailed Inspector in Mactivity")
                     }
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.blue)
+                    .foregroundColor(MactivityTheme.sand)
                 }
                 .buttonStyle(.plain)
                 
@@ -908,7 +922,7 @@ public struct ProcessesCardView: View {
                 }) {
                     Text("Activity Monitor")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.65))
                 }
                 .buttonStyle(.borderless)
             }
@@ -917,15 +931,19 @@ public struct ProcessesCardView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 9))
-                        .foregroundColor(.blue)
+                        .foregroundColor(MactivityTheme.sand)
                     Text("Click anywhere to open full process manager with search, sorting & force-quit")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.primary)
+                        .foregroundColor(MactivityTheme.sand)
                     Spacer()
                 }
-                .padding(.horizontal, 6)
+                .padding(.horizontal, 7)
                 .padding(.vertical, 3)
-                .background(Color.blue.opacity(0.12))
+                .background(MactivityTheme.petrol)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(MactivityTheme.sand.opacity(0.40), lineWidth: 0.8)
+                )
                 .cornerRadius(4)
             }
         }
@@ -938,6 +956,6 @@ public struct ProcessesCardView: View {
         .onTapGesture {
             WindowManager.shared.openWindow(tab: .processes)
         }
-        .help("Click to open full Process Inspector in Mac App")
+        .help("Click to open full Process Inspector in Mactivity")
     }
 }

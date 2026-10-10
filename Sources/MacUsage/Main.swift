@@ -8,12 +8,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         menuBarController = MenuBarController(collector: MetricsCollector.shared)
-        print("MacUsage started successfully on MacBook Pro M4 Pro")
+        print("Mactivity started successfully on MacBook Pro M4 Pro")
     }
 }
 
 @main
-struct MacUsageApp {
+struct MactivityApp {
     private static var appDelegate: AppDelegate?
     
     @MainActor

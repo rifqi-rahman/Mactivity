@@ -32,29 +32,37 @@ public struct DashboardView: View {
                             Text("Open App")
                         }
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.blue)
+                        .foregroundColor(MactivityTheme.sand)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.12))
+                        .background(MactivityTheme.petrol)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(MactivityTheme.sand.opacity(0.35), lineWidth: 0.8)
+                        )
                         .cornerRadius(12)
                     }
                     .buttonStyle(.plain)
-                    .help("Open Full Mac App Inspector Window")
+                    .help("Open Full Mactivity Inspector Window")
                 }
                 
                 Spacer()
                 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(Color.green)
-                        .frame(width: 7, height: 7)
+                        .fill(MactivityTheme.sand)
+                        .frame(width: 6, height: 6)
                     Text("Live")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(MactivityTheme.sand)
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.primary.opacity(0.06))
+                .background(MactivityTheme.petrol.opacity(0.70))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(MactivityTheme.slate.opacity(0.40), lineWidth: 0.8)
+                )
                 .cornerRadius(12)
             }
             .padding(.horizontal, 16)
@@ -72,7 +80,7 @@ public struct DashboardView: View {
                         ProcessorCardView(cpu: collector.cpu)
                         MemoryCardView(memory: collector.memory)
                         
-                        // Row 2: Storage & Peripherals (150pt each, matching Usage.pro)
+                        // Row 2: Storage & Peripherals (150pt each)
                         DiskCardView(disk: collector.disk)
                         BluetoothCardView(devices: collector.bluetoothDevices)
                         
@@ -100,13 +108,18 @@ public struct DashboardView: View {
                 .padding(.bottom, 14)
             }
             
-            Divider().opacity(0.5)
+            Divider().opacity(0.25)
             
             // Bottom Action Bar
             HStack {
-                Text("\(collector.cpu.chipName) · macOS")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
+                HStack(spacing: 5) {
+                    Text("Mactivity")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(MactivityTheme.sand)
+                    Text("· \(collector.cpu.chipName)")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(Color(white: 0.65))
+                }
                 
                 Spacer()
                 
@@ -129,7 +142,7 @@ public struct DashboardView: View {
                     
                     Divider()
                     
-                    Button("Open Full Mac App Window") {
+                    Button("Open Full Mactivity Inspector Window") {
                         WindowManager.shared.openWindow(tab: .processes)
                     }
                     
@@ -143,15 +156,19 @@ public struct DashboardView: View {
                     
                     Divider()
                     
-                    Button("Quit MacUsage") {
+                    Button("Quit Mactivity") {
                         NSApplication.shared.terminate(nil)
                     }
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(MactivityTheme.sand)
                         .frame(width: 28, height: 24)
-                        .background(Color.primary.opacity(0.06))
+                        .background(MactivityTheme.petrol)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(MactivityTheme.slate.opacity(0.40), lineWidth: 0.8)
+                        )
                         .cornerRadius(6)
                 }
                 .menuStyle(.borderlessButton)
@@ -160,7 +177,12 @@ public struct DashboardView: View {
             .padding(.vertical, 10)
         }
         .frame(width: 480, height: 680)
-        .background(VisualEffectBlurView().ignoresSafeArea())
+        .background(
+            ZStack {
+                VisualEffectBlurView().ignoresSafeArea()
+                MactivityTheme.petrol.opacity(0.40).ignoresSafeArea()
+            }
+        )
     }
 }
 
@@ -174,10 +196,14 @@ struct DevicePillButton: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 12, weight: isSelected ? .bold : .medium))
-                .foregroundColor(isSelected ? .primary : .secondary)
+                .foregroundColor(isSelected ? MactivityTheme.sand : Color(white: 0.70))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 5)
-                .background(isSelected ? Color.primary.opacity(0.10) : Color.clear)
+                .background(isSelected ? MactivityTheme.petrol : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(isSelected ? MactivityTheme.sand.opacity(0.40) : Color.clear, lineWidth: 0.8)
+                )
                 .cornerRadius(12)
         }
         .buttonStyle(.plain)

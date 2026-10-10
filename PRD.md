@@ -1,24 +1,26 @@
-# Product Requirements Document (PRD): MacUsage — Dedicated Activity Monitor for MacBook Pro M4 Pro
+# Product Requirements Document (PRD): Mactivity — Dedicated Activity Monitor for MacBook Pro M4 Pro
 
 ## 1. Executive Summary & Vision
-**MacUsage** is a dedicated, ultra-lightweight, and visually stunning macOS menu bar activity monitor engineered specifically for Apple Silicon, with first-class optimization for the **MacBook Pro M4 Pro** (Apple M4 Pro chip architecture). 
+**Mactivity** is a dedicated, ultra-lightweight, and visually stunning macOS menu bar and companion inspector activity monitor engineered specifically for Apple Silicon, with first-class optimization for the **MacBook Pro M4 Pro** (Apple M4 Pro chip architecture). 
 
-Inspired by the acclaimed design and UX principles of [Usage](https://usage.pro/), MacUsage provides an at-a-glance menu bar presence coupled with an informative, glassmorphic popover dashboard. It bridges the gap between Apple's native Activity Monitor (utilitarian, clinical, separate window) and daily workflow needs: giving users instant insight into processor load, memory pressure, network throughput and accumulated data, disk and remote volume capacity, GPU utilization, real-time thermal status, fan RPMs, battery health, connected Bluetooth peripheral batteries, and top resource-consuming processes.
+Differentiated with an architectural Nordic Terracotta & Midnight Teal colorway (`#0F3040`, `#464858`, `#A56F63`, `#D99B7F`), Mactivity provides an at-a-glance menu bar presence coupled with an informative, glassmorphic Bento dashboard and a deep-dive macOS Inspector window. It bridges the gap between Apple's native Activity Monitor (utilitarian, clinical, separate window) and daily workflow needs: giving users instant insight into processor load, memory pressure, network throughput and accumulated data, disk and remote volume capacity, GPU utilization, real-time thermal status, fan RPMs, battery health, connected Bluetooth peripheral batteries, and top resource-consuming processes.
 
 ---
 
-## 2. Competitive Deconstruction: What Makes Usage.pro Special?
+## 2. Competitive Deconstruction & Brand Identity
 
-Through deep analysis of **Usage.pro** and real-world usage patterns, the following core strengths set it apart:
+Through deep analysis of the utility space and user experience, Mactivity distinguishes itself:
 
-| Dimension | Usage.pro Secret Sauce | Implementation in MacUsage |
+| Dimension | Standard Utilities / Competitors | Implementation in Mactivity |
 | :--- | :--- | :--- |
-| **Menu Bar First** | Unobtrusive, modular menu bar components. Users can pin just the stats they care about (e.g., CPU %, Net up/down, Disk radial gauge) without cluttering the native macOS menu bar. | Native `NSStatusItem` with customizable display modes: icon-only, compact dual-stat badges (e.g. CPU + Net), or radial gauges. |
-| **Bento Grid Architecture** | 2-column rounded cards with unified spacing, high-contrast typography, and rich visual data representations (donuts, radial ticks, vertical liquid bars, mirrored bandwidth waves). | Modular SwiftUI card layout with native macOS `.ultraThinMaterial` / dark-light mode reactive styling and consistent typography. |
-| **Mirrored Network Traffic** | Dual-direction sparkline / bar visualization: download on top (vibrant magenta/coral), upload on bottom (electric violet/indigo). | Interactive mirrored vertical bar graph with instant speed indicators and aggregate data accounting (Today, 7 Days, 30 Days). |
-| **Peripheral Battery Slots** | Grid of battery pods for connected Bluetooth devices (AirPods, Magic Keyboard, Magic Trackpad) with empty hatched slots. | Direct `IOBluetooth` & `IOKit` power reporting displaying device glyph, percentage fill, and charging indicator. |
-| **Apple Silicon Thermals & Fans** | Visual thermometer showing SoC temperature zone and dual fan speeds over time. | Direct thermal state monitoring and SMC/IOReport fan tachometer polling tailored to M4 Pro dual blower acoustics. |
-| **Zero Bloat & Battery Friendly** | Native Swift binary consuming minimal memory (~20MB) and virtually 0% idle CPU. | Pure Swift 6 + AppKit/SwiftUI architecture utilizing Mach kernel APIs (`host_statistics64`, `vm_statistics64`, `libproc`) without Electron overhead. |
+| **Color Identity** | Neon cyan, vibrant magenta, bright violet | Architectural Signature Palette: `#0F3040` (Midnight Petrol), `#464858` (Slate), `#A56F63` (Copper), `#D99B7F` (Warm Sand) |
+| **Menu Bar First** | Shifts width erratically with dynamic numbers | Stabilized fixed-width (132pt) monospace numeric layout preventing menu bar jitter |
+| **Two-Tier Architecture** | Either popup only or heavy window app | Seamless two-tier design: Menu Bar Bento popup + Clickable Inspector Window for deep drill-down |
+| **Bento Grid Architecture** | Disjointed cards with empty spaces | Harmonious 2-column rounded cards with hover glowing borders and reactive cursor highlights |
+| **Mirrored Network Traffic** | Generic line graph | Symmetrical mirrored dual-tone bars (Download top in Sand, Upload bottom in Copper) with historical traffic tracking |
+| **Peripheral Battery Slots** | Disconnected battery listings | Clean vertical battery pillars with device glyphs for connected Bluetooth gear |
+| **Apple Silicon Thermals & Fans** | Basic temperature number | Fluid mercury thermometer + dual blower fan tachometer tuned for M4 Pro acoustic curves |
+| **Zero Bloat & Battery Friendly** | Electron memory hogs (>250MB) | Pure Swift 6 + AppKit/SwiftUI binary (~20MB RAM, <0.3% CPU idle) using Mach kernel and IOKit APIs |
 
 ---
 

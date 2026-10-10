@@ -33,7 +33,7 @@ public class WindowManager: NSObject, NSWindowDelegate {
         )
         
         window.center()
-        window.title = "MacUsage — System Activity Monitor"
+        window.title = "Mactivity — System Activity Monitor"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false

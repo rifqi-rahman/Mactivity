@@ -22,9 +22,9 @@ public struct InspectorWindowView: View {
             VStack(alignment: .leading, spacing: 12) {
                 // Header Profile
                 HStack(spacing: 10) {
-                    Image(systemName: "laptopcomputer")
+                    Image(systemName: "macbook.gen2")
                         .font(.system(size: 24))
-                        .foregroundColor(.blue)
+                        .foregroundColor(MactivityTheme.sand)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(collector.cpu.chipName)
                             .font(.system(size: 13, weight: .bold))
@@ -46,7 +46,7 @@ public struct InspectorWindowView: View {
                                 .font(.system(size: 12, weight: .medium))
                         } icon: {
                             Image(systemName: tab.iconName)
-                                .foregroundColor(uiState.selectedInspectorTab == tab ? .blue : .secondary)
+                                .foregroundColor(uiState.selectedInspectorTab == tab ? MactivityTheme.sand : .secondary)
                         }
                     }
                     .tag(tab)
@@ -203,7 +203,7 @@ struct ProcessesInspectorView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: proc.isSystem ? "gearshape.2" : "app.fill")
                                     .font(.system(size: 13))
-                                    .foregroundColor(proc.isSystem ? .secondary : .blue)
+                                    .foregroundColor(proc.isSystem ? .secondary : MactivityTheme.sand)
                                 Text(proc.name)
                                     .font(.system(size: 12, weight: .medium))
                                     .lineLimit(1)
@@ -290,12 +290,12 @@ struct ProcessorInspectorView: View {
                         
                         HStack(spacing: 12) {
                             HStack(spacing: 4) {
-                                Circle().fill(Color.cyan).frame(width: 7, height: 7)
+                                Circle().fill(MactivityTheme.sand).frame(width: 7, height: 7)
                                 Text(String(format: "User: %.1f%%", collector.cpu.userUsage))
                                     .font(.system(size: 11))
                             }
                             HStack(spacing: 4) {
-                                Circle().fill(Color.purple).frame(width: 7, height: 7)
+                                Circle().fill(MactivityTheme.copper).frame(width: 7, height: 7)
                                 Text(String(format: "System: %.1f%%", collector.cpu.systemUsage))
                                     .font(.system(size: 11))
                             }
@@ -327,13 +327,13 @@ struct ProcessorInspectorView: View {
                             VStack(spacing: 6) {
                                 Text(isPCore ? "P-Core \(idx + 1)" : "E-Core \(idx - 9)")
                                     .font(.system(size: 10, weight: .semibold))
-                                    .foregroundColor(isPCore ? .blue : .purple)
+                                    .foregroundColor(isPCore ? MactivityTheme.sand : MactivityTheme.copper)
                                 
                                 GeometryReader { geo in
                                     ZStack(alignment: .bottom) {
                                         Capsule().fill(Color.primary.opacity(0.08))
                                         Capsule()
-                                            .fill(isPCore ? Color.blue : Color.purple)
+                                            .fill(isPCore ? MactivityTheme.sand : MactivityTheme.copper)
                                             .frame(height: max(4, geo.size.height * CGFloat(load / 100.0)))
                                     }
                                 }
@@ -382,9 +382,9 @@ struct MemoryInspectorView: View {
                     let compPct = Double(collector.memory.compressedBytes) / Double(max(1, collector.memory.totalBytes)) * 100.0
                     
                     DonutChartView(segments: [
-                        (appPct, Color.blue),
-                        (wiredPct, Color.cyan),
-                        (compPct, Color.indigo)
+                        (appPct, MactivityTheme.sand),
+                        (wiredPct, MactivityTheme.copper),
+                        (compPct, MactivityTheme.slate)
                     ], lineWidth: 16)
                     .frame(width: 85, height: 85)
                 }
@@ -394,11 +394,11 @@ struct MemoryInspectorView: View {
                 
                 // Detailed memory breakdown table
                 VStack(spacing: 10) {
-                    MemoryStatRow(title: "App Memory (Active user applications)", bytes: collector.memory.appBytes, color: .blue)
+                    MemoryStatRow(title: "App Memory (Active user applications)", bytes: collector.memory.appBytes, color: MactivityTheme.sand)
                     Divider().opacity(0.4)
-                    MemoryStatRow(title: "Wired Memory (Operating system & drivers)", bytes: collector.memory.wiredBytes, color: .cyan)
+                    MemoryStatRow(title: "Wired Memory (Operating system & drivers)", bytes: collector.memory.wiredBytes, color: MactivityTheme.copper)
                     Divider().opacity(0.4)
-                    MemoryStatRow(title: "Compressed Memory (Compressed in RAM)", bytes: collector.memory.compressedBytes, color: .indigo)
+                    MemoryStatRow(title: "Compressed Memory (Compressed in RAM)", bytes: collector.memory.compressedBytes, color: MactivityTheme.slate)
                     Divider().opacity(0.4)
                     MemoryStatRow(title: "Cached / Free Memory", bytes: collector.memory.freeBytes, color: .gray)
                     Divider().opacity(0.4)
@@ -456,10 +456,10 @@ struct NetworkInspectorView: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("↓ \(NetworkInfo.formatSpeed(collector.network.downloadBytesPerSec))")
                             .font(.system(size: 18, weight: .bold, design: .monospaced))
-                            .foregroundColor(.pink)
+                            .foregroundColor(MactivityTheme.sand)
                         Text("↑ \(NetworkInfo.formatSpeed(collector.network.uploadBytesPerSec))")
                             .font(.system(size: 18, weight: .bold, design: .monospaced))
-                            .foregroundColor(.purple)
+                            .foregroundColor(MactivityTheme.copper)
                     }
                 }
                 .padding(16)
@@ -518,7 +518,7 @@ struct DiskInspectorView: View {
                         HStack {
                             Image(systemName: vol.isRemote ? "network" : (vol.isRemovable ? "externaldrive.fill" : "internaldrive.fill"))
                                 .font(.system(size: 18))
-                                .foregroundColor(vol.isRemote ? .purple : .blue)
+                                .foregroundColor(vol.isRemote ? MactivityTheme.copper : MactivityTheme.sand)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(vol.name)
                                     .font(.system(size: 13, weight: .bold))
@@ -540,7 +540,7 @@ struct DiskInspectorView: View {
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color.primary.opacity(0.08)).frame(height: 6)
                                 Capsule()
-                                    .fill(vol.isRemote ? Color.purple : Color.blue)
+                                    .fill(vol.isRemote ? MactivityTheme.copper : MactivityTheme.sand)
                                     .frame(width: max(6, geo.size.width * CGFloat(vol.usedPercent / 100.0)), height: 6)
                             }
                         }
@@ -612,7 +612,7 @@ struct BatteryInspectorView: View {
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                         Text(collector.fans.status)
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.blue)
+                            .foregroundColor(MactivityTheme.sand)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(14)

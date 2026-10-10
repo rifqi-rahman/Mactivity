@@ -1,20 +1,30 @@
-# MacUsage 🖥️⚡
+# Mactivity 🖥️⚡
 
-> A dedicated, native menu bar activity monitor engineered specifically for **MacBook Pro M4 Pro**, inspired by [Usage.pro](https://usage.pro/).
+> A dedicated, native menu bar and inspector activity monitor engineered specifically for **MacBook Pro M4 Pro**.
 
-MacUsage sits directly in your macOS menu bar next to your battery and Wi-Fi icons. Clicking it opens a glassmorphic Bento dashboard showing live performance, thermal, and network metrics.
+Mactivity sits directly in your macOS menu bar next to your battery and Wi-Fi icons. Clicking it opens a glassmorphic Bento dashboard showing live performance, thermal, and network metrics with our signature Nordic Terracotta & Midnight Teal colorway.
 
 ---
 
-## 🌟 Reference Inspiration: What Makes Usage Special?
+## 🎨 Signature Palette & Identity
 
-Inspired by **Usage.pro**, MacUsage incorporates:
-1. **At-a-Glance Menu Bar Integration**: Unobtrusive live status badge (`⊚ 12%  ↓24K`) in the system status bar.
-2. **Bento Card Dashboard**: 2-column rounded cards with rich data visualizations.
-3. **Mirrored Network Visualization**: Symmetrical wave chart showing download traffic ascending in pink/fuchsia and upload traffic descending in violet.
-4. **Peripheral Battery Slots**: Vertical battery gauges for connected Bluetooth devices (AirPods, Magic Keyboard, Magic Trackpad) with hatched empty slots.
-5. **Hardware Thermometer & Dual Fans**: Real-time SoC temperature with fluid thermometer visual and dual fan tachometer (Left & Right blower RPMs) tailored to the MacBook Pro M4 Pro thermal envelope.
-6. **Zero Bloat**: Native Swift 6 + AppKit/SwiftUI binary (~20MB RAM, <0.3% CPU usage) using direct Mach kernel and IOKit APIs without Electron overhead.
+Unlike generic utility tools, Mactivity is styled with a bespoke architectural palette:
+- **`#0F3040` (Midnight Petrol Teal)**: Deep matte background canvas & subtle frosted card glass.
+- **`#464858` (Muted Slate Gray)**: Structural card borders, dividers, track bases, and inactive state markers.
+- **`#A56F63` (Muted Terracotta Rose / Copper)**: System workloads, upload bandwidth, remote volumes, secondary gauges.
+- **`#D99B7F` (Warm Sand Peach / Golden Terracotta)**: User workloads, download bandwidth, active highlights, primary gauges.
+
+---
+
+## 🌟 Key Features
+
+1. **At-a-Glance Fixed-Width Menu Bar**: Stabilized live status pill (`⊚ 12%  ↓24K`) that never shifts adjacent status icons.
+2. **Harmonious Bento Card Grid**: Perfectly proportioned 2-column bento layout with hover glow cards.
+3. **Dedicated macOS Inspector Window**: Full-fledged companion app accessible by clicking any card or pressing Open Inspector.
+4. **Mirrored Network Visualization**: Symmetrical wave chart showing download traffic in warm peach and upload traffic in copper.
+5. **Peripheral Battery Gauge**: Clean vertical battery pillars with device glyphs for connected Bluetooth gear.
+6. **Thermal & Fan Tachometer**: Real-time SoC temperature with glass fluid thermometer and dual blower fan telemetry.
+7. **Zero Bloat Performance**: Native Swift 6 + AppKit/SwiftUI binary (~20MB RAM, <0.3% CPU usage) using direct Mach kernel and IOKit APIs.
 
 ---
 
@@ -22,7 +32,7 @@ Inspired by **Usage.pro**, MacUsage incorporates:
 
 | Module | What It Tracks | Visual Component |
 | :--- | :--- | :--- |
-| **Processor (CPU)** | Real-time CPU load, user vs. system breakdown, 14-core M4 Pro cluster | 16-bar dual-tone history timeline (Cyan user / Purple system) |
+| **Processor (CPU)** | Real-time CPU load, user vs. system breakdown, 14-core M4 Pro cluster | 16-bar dual-tone history timeline (Sand user / Copper system) |
 | **Memory (RAM)** | Total vs used unified memory (e.g., 24 GB), App, Wired, Compressed, Free, Swap | Multi-segment circular Donut Chart + Memory Pressure pill |
 | **Network Activity** | Real-time download & upload speeds, LAN & WAN IP addresses | Mirrored wave bar chart (Download top / Upload bottom) |
 | **Network Data** | Accumulated data traffic: Today, Last 7 Days, Last 30 Days | High-contrast data ledger with automatic date rollover |
@@ -31,8 +41,8 @@ Inspired by **Usage.pro**, MacUsage incorporates:
 | **Cooling Fans** | Left Fan & Right Fan RPM tachometer, acoustic mode (Silent / Active / Boost) | Dual blower RPM readouts + speed curve progress bar |
 | **Graphics (GPU)** | Apple Silicon M4 Pro GPU load %, active shared VRAM allocation | Live GPU utilization sparkline |
 | **Battery & Power** | Charge %, Power state (AC / Battery), Watts in/out, Cycle count, Health % | Live battery status + power metrics |
-| **Bluetooth Devices** | Battery level of connected Bluetooth headphones, keyboard, and trackpad | 4 vertical battery pillars with device glyphs and hatched slots |
-| **Top Processes** | Top resource-consuming applications ranked by CPU % or Memory | Interactive segmented list with one-click Activity Monitor launcher |
+| **Bluetooth Devices** | Battery level of connected Bluetooth headphones, keyboard, and trackpad | Clean vertical battery pillars with device glyphs and percentages |
+| **Top Processes** | Top resource-consuming applications ranked by CPU % or Memory | Interactive segmented list with one-click full Inspector window |
 | **Remote Volumes** | Mounted internal containers, external USB/Thunderbolt drives, network shares | Volume capacity bars with free space readouts |
 
 ---
@@ -44,15 +54,15 @@ From the terminal, run the build script:
 ```bash
 ./build.sh
 ```
-This produces `build/MacUsage.app`.
+This produces `build/Mactivity.app`.
 
 To launch the app:
 ```bash
-open build/MacUsage.app
+open build/Mactivity.app
 ```
 Or run the executable directly:
 ```bash
-./build/MacUsage.app/Contents/MacOS/MacUsage
+./build/Mactivity.app/Contents/MacOS/Mactivity
 ```
 
 ### 2. Menu Bar Controls

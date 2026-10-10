@@ -71,7 +71,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         
         // Crisp symbol and monospaced typography
         let imageConfig = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
-        let icon = NSImage(systemSymbolName: "gauge.with.needle", accessibilityDescription: "MacUsage")?.withSymbolConfiguration(imageConfig)
+        let icon = NSImage(systemSymbolName: "gauge.with.needle", accessibilityDescription: "Mactivity")?.withSymbolConfiguration(imageConfig)
         
         button.image = icon
         button.imagePosition = .imageLeft
@@ -109,7 +109,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     private func showContextMenu() {
         let menu = NSMenu()
         
-        menu.addItem(NSMenuItem(title: "MacUsage · M4 Pro", action: nil, keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Mactivity · M4 Pro", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         
         menu.addItem(NSMenuItem(title: "Open Dashboard Popover", action: #selector(openDashboardAction), keyEquivalent: "d"))
@@ -118,7 +118,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         menu.addItem(NSMenuItem(title: "Force Refresh", action: #selector(refreshAction), keyEquivalent: "r"))
         
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit MacUsage", action: #selector(quitAction), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit Mactivity", action: #selector(quitAction), keyEquivalent: "q"))
         
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
