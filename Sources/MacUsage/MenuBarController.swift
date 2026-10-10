@@ -160,19 +160,37 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         } else {
             collector.setPopoverVisibility(true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            if let window = popover.contentViewController?.view.window {
-                window.makeKey()
-            }
+            configurePopoverWindow()
         }
     }
     
     // MARK: - NSPopoverDelegate
     public func popoverWillShow(_ notification: Notification) {
         collector.setPopoverVisibility(true)
+        configurePopoverWindow()
+    }
+    
+    public func popoverDidShow(_ notification: Notification) {
+        configurePopoverWindow()
     }
     
     public func popoverDidClose(_ notification: Notification) {
         collector.setPopoverVisibility(false)
+    }
+    
+    /// Ensures popover floats on top of other applications, including native macOS Fullscreen Spaces
+    private func configurePopoverWindow() {
+        let applyConfig = { [weak self] in
+            guard let self = self, let window = self.popover.contentViewController?.view.window else { return }
+            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            window.level = .statusBar
+            window.orderFrontRegardless()
+        }
+        
+        applyConfig()
+        DispatchQueue.main.async {
+            applyConfig()
+        }
     }
     
     private func showContextMenu() {
@@ -228,6 +246,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         if let button = statusItem.button, !popover.isShown {
             collector.setPopoverVisibility(true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            configurePopoverWindow()
         }
     }
     
@@ -239,6 +258,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         if let button = statusItem.button, !popover.isShown {
             collector.setPopoverVisibility(true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            configurePopoverWindow()
         }
     }
     
