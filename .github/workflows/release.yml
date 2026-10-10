@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+      - "v.*"
   workflow_dispatch:
     inputs:
       version:
@@ -24,10 +25,10 @@ jobs:
 
       - name: Package Native macOS App, DMG, and ZIP
         run: |
-          VERSION="${{ github.event.inputs.version || github.ref_name }}"
-          VERSION="${VERSION#v}"
+          RAW_VER="${{ github.event.inputs.version || github.ref_name }}"
+          CLEAN_VER=$(echo "$RAW_VER" | sed -E 's/^v\.?//')
           chmod +x build.sh scripts/package-release.sh
-          ./scripts/package-release.sh "$VERSION"
+          ./scripts/package-release.sh "$CLEAN_VER"
 
       - name: Create GitHub Release & Upload Assets
         uses: softprops/action-gh-release@v2

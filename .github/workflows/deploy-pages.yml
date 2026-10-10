@@ -3,6 +3,9 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: ["main"]
+  workflow_run:
+    workflows: ["Build & Publish Release"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
