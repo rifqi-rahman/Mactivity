@@ -126,7 +126,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     }
     
     @objc private func openInspectorWindowAction() {
-        WindowManager.shared.openWindow(tab: .processes)
+        WindowManager.shared.openWindow(tab: .dashboard)
     }
     
     @objc private func openDashboardAction() {

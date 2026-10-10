@@ -1,6 +1,7 @@
 import SwiftUI
 
 public enum InspectorTab: String, CaseIterable, Identifiable {
+    case dashboard = "Dashboard"
     case processes = "Processes"
     case processor = "Processor (CPU)"
     case graphics = "Graphics (GPU)"
@@ -15,6 +16,7 @@ public enum InspectorTab: String, CaseIterable, Identifiable {
     
     public var iconName: String {
         switch self {
+        case .dashboard: return "square.grid.2x2"
         case .processes: return "list.bullet.rectangle"
         case .processor: return "cpu"
         case .graphics: return "display"
@@ -46,7 +48,8 @@ public class UIState: ObservableObject {
     @Published public var refreshInterval: Double = 1.0
     
     // Full Mac App Inspector State
-    @Published public var selectedInspectorTab: InspectorTab = .processes
+    @Published public var selectedInspectorTab: InspectorTab = .dashboard
+    @Published public var hoveredSidebarTab: InspectorTab? = nil
     @Published public var processSearchText: String = ""
     @Published public var processSortField: ProcessSortField = .cpu
     @Published public var processSortAscending: Bool = false

@@ -20,42 +20,49 @@ public struct InspectorWindowView: View {
         NavigationSplitView {
             // Sidebar
             VStack(alignment: .leading, spacing: 14) {
-                // Header Profile
-                HStack(spacing: 10) {
-                    Image(systemName: "macbook.gen2")
-                        .font(.system(size: 24))
-                        .foregroundColor(MactivityTheme.sand)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(collector.cpu.chipName)
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.primary)
-                        Text("\(collector.cpu.coreCount) Cores · \(String(format: "%.0f", Double(collector.memory.totalBytes) / 1_073_741_824.0)) GB Unified")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                // Header Profile (Clickable to Dashboard)
+                Button(action: {
+                    uiState.selectedInspectorTab = .dashboard
+                }) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "macbook.gen2")
+                            .font(.system(size: 24))
+                            .foregroundColor(MactivityTheme.sand)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(collector.cpu.chipName)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.primary)
+                            Text("\(collector.cpu.coreCount) Cores · \(String(format: "%.0f", Double(collector.memory.totalBytes) / 1_073_741_824.0)) GB Unified")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        }
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.top, 16)
+                    .contentShape(Rectangle())
                 }
-                .padding(.horizontal, 14)
-                .padding(.top, 16)
+                .buttonStyle(.plain)
                 
                 Divider().opacity(0.4)
                 
-                // Bespoke Themed Navigation Tabs
+                // Bespoke Themed Navigation Tabs (Full Bilah Clickable Surface)
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(InspectorTab.allCases) { tab in
                             let isSelected = uiState.selectedInspectorTab == tab
+                            let isHovered = uiState.hoveredSidebarTab == tab
                             Button(action: {
                                 uiState.selectedInspectorTab = tab
                             }) {
                                 HStack(spacing: 10) {
                                     Image(systemName: tab.iconName)
                                         .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(isSelected ? MactivityTheme.sand : .secondary)
+                                        .foregroundColor(isSelected ? MactivityTheme.sand : (isHovered ? MactivityTheme.sand.opacity(0.85) : .secondary))
                                         .frame(width: 20)
                                     
                                     Text(tab.rawValue)
                                         .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
-                                        .foregroundColor(isSelected ? .white : .primary)
+                                        .foregroundColor(isSelected ? .white : (isHovered ? Color.white.opacity(0.95) : .primary))
                                         .lineLimit(1)
                                     
                                     Spacer()
@@ -67,17 +74,26 @@ public struct InspectorWindowView: View {
                                     }
                                 }
                                 .padding(.horizontal, 10)
-                                .padding(.vertical, 7)
+                                .padding(.vertical, 8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .fill(isSelected ? MactivityTheme.petrol.opacity(0.85) : Color.clear)
+                                        .fill(isSelected
+                                              ? MactivityTheme.petrol.opacity(0.85)
+                                              : (isHovered ? MactivityTheme.petrol.opacity(0.40) : Color.primary.opacity(0.001)))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .stroke(isSelected ? MactivityTheme.slate.opacity(0.60) : Color.clear, lineWidth: 0.8)
+                                        .stroke(isSelected
+                                                ? MactivityTheme.slate.opacity(0.60)
+                                                : (isHovered ? MactivityTheme.slate.opacity(0.35) : Color.clear), lineWidth: 0.8)
                                 )
+                                .contentShape(RoundedRectangle(cornerRadius: 8))
                             }
                             .buttonStyle(.plain)
+                            .onHover { hovering in
+                                uiState.hoveredSidebarTab = hovering ? tab : nil
+                            }
                         }
                     }
                     .padding(.horizontal, 10)
@@ -107,6 +123,8 @@ public struct InspectorWindowView: View {
             // Tab Content with Adaptive Responsive Layouts
             Group {
                 switch uiState.selectedInspectorTab {
+                case .dashboard:
+                    DashboardInspectorView(collector: collector, uiState: uiState)
                 case .processes:
                     ProcessesInspectorView(collector: collector, uiState: uiState)
                 case .processor:
@@ -130,6 +148,97 @@ public struct InspectorWindowView: View {
             .frame(minWidth: 620, minHeight: 520)
             .background(Color(NSColor.windowBackgroundColor))
         }
+    }
+}
+
+// MARK: - 0. Dashboard Inspector View (Premier Big Screen Overview)
+@MainActor
+struct DashboardInspectorView: View {
+    @ObservedObject var collector: MetricsCollector
+    @ObservedObject var uiState: UIState
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                // Header Profile & Live Telemetry Banner
+                HStack(alignment: .center, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 8) {
+                            Text(collector.cpu.machineName)
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            Text("· \(collector.cpu.chipName)")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(MactivityTheme.sand)
+                        }
+                        
+                        Text("\(collector.cpu.topologyDescription) · \(collector.gpu.gpuName) \(collector.gpu.coreCountString) · \(String(format: "%.0f", Double(collector.memory.totalBytes) / 1_073_741_824.0)) GB Unified")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    // Quick KPI Badges
+                    HStack(spacing: 8) {
+                        DashboardMetricBadge(title: "CPU", value: String(format: "%.0f%%", collector.cpu.totalUsage), color: MactivityTheme.sand)
+                        DashboardMetricBadge(title: "RAM", value: String(format: "%.0f%%", collector.memory.usedPercent), color: MactivityTheme.copper)
+                        DashboardMetricBadge(title: "TEMP", value: "\(Int(round(collector.thermals.temperatureC)))°C", color: collector.thermals.temperatureC > 75 ? .red : MactivityTheme.sand)
+                        DashboardMetricBadge(title: "NET", value: NetworkInfo.formatSpeed(collector.network.downloadBytesPerSec), color: MactivityTheme.sand)
+                    }
+                }
+                .padding(16)
+                .background(Color.primary.opacity(0.04))
+                .cornerRadius(12)
+                
+                // Symmetrical Bento Grid (Adapts to 2 or 3 columns based on window width)
+                LazyVGrid(columns: [
+                    GridItem(.adaptive(minimum: 260, maximum: 400), spacing: 12)
+                ], spacing: 12) {
+                    ProcessorCardView(cpu: collector.cpu)
+                    MemoryCardView(memory: collector.memory)
+                    GPUCardView(gpu: collector.gpu)
+                    
+                    DiskCardView(disk: collector.disk)
+                    NetworkCardView(network: collector.network)
+                    NetworkDataCardView(network: collector.network)
+                    
+                    TemperatureCardView(thermals: collector.thermals)
+                    FansCardView(fans: collector.fans)
+                    BatteryCardView(battery: collector.battery)
+                    
+                    BluetoothCardView(devices: collector.bluetoothDevices)
+                    VolumesCardView(volumes: collector.volumes)
+                    SystemArchCardView(cpu: collector.cpu)
+                }
+                
+                // Grand Hero Top Processes Card (Full Width in Overview)
+                ProcessesCardView(topCPU: collector.topProcessesCPU, topMem: collector.topProcessesMemory)
+            }
+            .padding(18)
+        }
+    }
+}
+
+struct DashboardMetricBadge: View {
+    var title: String
+    var value: String
+    var color: Color
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(title)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundColor(color)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.primary.opacity(0.03))
+        .cornerRadius(8)
     }
 }
 

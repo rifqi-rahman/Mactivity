@@ -25,7 +25,7 @@ public struct DashboardView: View {
                     }
                     
                     Button(action: {
-                        WindowManager.shared.openWindow(tab: .processes)
+                        WindowManager.shared.openWindow(tab: .dashboard)
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "macwindow")
@@ -143,7 +143,7 @@ public struct DashboardView: View {
                     Divider()
                     
                     Button("Open Full Mactivity Inspector Window") {
-                        WindowManager.shared.openWindow(tab: .processes)
+                        WindowManager.shared.openWindow(tab: .dashboard)
                     }
                     
                     Button("Open Activity Monitor") {

@@ -11,7 +11,7 @@ public class WindowManager: NSObject, NSWindowDelegate {
         super.init()
     }
     
-    public func openWindow(tab: InspectorTab = .processes) {
+    public func openWindow(tab: InspectorTab = .dashboard) {
         UIState.shared.selectedInspectorTab = tab
         
         if let win = detailWindow {
