@@ -2,11 +2,14 @@ import SwiftUI
 
 public enum InspectorTab: String, CaseIterable, Identifiable {
     case processes = "Processes"
-    case processor = "Processor"
+    case processor = "Processor (CPU)"
+    case graphics = "Graphics (GPU)"
     case memory = "Memory"
-    case network = "Network"
-    case disk = "Disk & Volumes"
-    case battery = "Battery & Thermals"
+    case network = "Network & Data"
+    case disk = "Disk & Storage"
+    case battery = "Battery & Power"
+    case thermals = "Thermals & Fans"
+    case bluetooth = "Bluetooth Devices"
     
     public var id: String { rawValue }
     
@@ -14,10 +17,13 @@ public enum InspectorTab: String, CaseIterable, Identifiable {
         switch self {
         case .processes: return "list.bullet.rectangle"
         case .processor: return "cpu"
+        case .graphics: return "display"
         case .memory: return "memorychip"
         case .network: return "globe"
         case .disk: return "internaldrive"
         case .battery: return "battery.100.bolt"
+        case .thermals: return "thermometer.medium"
+        case .bluetooth: return "antenna.radiowaves.left.and.right"
         }
     }
 }
@@ -45,6 +51,8 @@ public class UIState: ObservableObject {
     @Published public var processSortField: ProcessSortField = .cpu
     @Published public var processSortAscending: Bool = false
     @Published public var selectedProcessPID: Int? = nil
+    @Published public var processFilterMode: Int = 0 // 0 = All, 1 = User Apps, 2 = System
+    @Published public var selectedBluetoothDeviceID: String? = nil
     @Published public var hoveredCard: String? = nil
     
     public func setHoveredCard(_ name: String, isHovered: Bool) {

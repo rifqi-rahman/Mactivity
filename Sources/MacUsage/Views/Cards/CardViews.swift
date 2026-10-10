@@ -327,7 +327,7 @@ public struct BluetoothCardView: View {
         BentoCardContainer(
             title: "Bluetooth Devices",
             icon: "headphones",
-            targetTab: .battery,
+            targetTab: .bluetooth,
             unitDetail: "Bluetooth 5.3 · Active Peripherals",
             badge: nil,
             height: 150
@@ -355,7 +355,7 @@ public struct TemperatureCardView: View {
         BentoCardContainer(
             title: "Processor Temp",
             icon: "thermometer.medium",
-            targetTab: .battery,
+            targetTab: .thermals,
             unitDetail: "M4 Pro Die Sensors · 0% Throttling",
             badge: thermals.status,
             height: 150
@@ -416,7 +416,7 @@ public struct FansCardView: View {
         BentoCardContainer(
             title: "Cooling Fans",
             icon: "fanblades",
-            targetTab: .battery,
+            targetTab: .thermals,
             unitDetail: "Dual Centrifugal Blowers · Max 5800 RPM",
             badge: fans.leftRPM > 0 ? "Active" : "Silent",
             height: 150
@@ -585,7 +585,7 @@ public struct GPUCardView: View {
         BentoCardContainer(
             title: "Graphics (GPU)",
             icon: "display",
-            targetTab: .processor,
+            targetTab: .graphics,
             unitDetail: "Apple M4 Pro 20-Core GPU · Metal 3.2",
             badge: "20-Core",
             height: 150

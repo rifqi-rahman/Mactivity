@@ -19,7 +19,7 @@ public struct InspectorWindowView: View {
     public var body: some View {
         NavigationSplitView {
             // Sidebar
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 // Header Profile
                 HStack(spacing: 10) {
                     Image(systemName: "macbook.gen2")
@@ -28,6 +28,7 @@ public struct InspectorWindowView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(collector.cpu.chipName)
                             .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.primary)
                         Text("\(collector.cpu.coreCount) Cores · \(String(format: "%.0f", Double(collector.memory.totalBytes) / 1_073_741_824.0)) GB Unified")
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
@@ -36,47 +37,82 @@ public struct InspectorWindowView: View {
                 .padding(.horizontal, 14)
                 .padding(.top, 16)
                 
-                Divider().opacity(0.5)
+                Divider().opacity(0.4)
                 
-                // Navigation Tabs
-                List(InspectorTab.allCases, selection: $uiState.selectedInspectorTab) { tab in
-                    NavigationLink(value: tab) {
-                        Label {
-                            Text(tab.rawValue)
-                                .font(.system(size: 12, weight: .medium))
-                        } icon: {
-                            Image(systemName: tab.iconName)
-                                .foregroundColor(uiState.selectedInspectorTab == tab ? MactivityTheme.sand : .secondary)
+                // Bespoke Themed Navigation Tabs
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(InspectorTab.allCases) { tab in
+                            let isSelected = uiState.selectedInspectorTab == tab
+                            Button(action: {
+                                uiState.selectedInspectorTab = tab
+                            }) {
+                                HStack(spacing: 10) {
+                                    Image(systemName: tab.iconName)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(isSelected ? MactivityTheme.sand : .secondary)
+                                        .frame(width: 20)
+                                    
+                                    Text(tab.rawValue)
+                                        .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                                        .foregroundColor(isSelected ? .white : .primary)
+                                        .lineLimit(1)
+                                    
+                                    Spacer()
+                                    
+                                    if isSelected {
+                                        Capsule()
+                                            .fill(MactivityTheme.sand)
+                                            .frame(width: 3, height: 16)
+                                    }
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(isSelected ? MactivityTheme.petrol.opacity(0.85) : Color.clear)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(isSelected ? MactivityTheme.slate.opacity(0.60) : Color.clear, lineWidth: 0.8)
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .tag(tab)
+                    .padding(.horizontal, 10)
                 }
-                .listStyle(.sidebar)
                 
                 Spacer()
                 
                 // Bottom Status
-                HStack {
+                HStack(spacing: 8) {
                     Circle()
                         .fill(Color.green)
                         .frame(width: 7, height: 7)
-                    Text("Live Monitoring")
+                    Text("Live Telemetry")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(.secondary)
                     Spacer()
+                    Text("1.0s")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(MactivityTheme.sand)
                 }
                 .padding(.horizontal, 14)
                 .padding(.bottom, 12)
             }
-            .frame(minWidth: 200, idealWidth: 220)
+            .frame(minWidth: 200, idealWidth: 220, maxWidth: 260)
+            .background(Color(NSColor.windowBackgroundColor).opacity(0.60))
         } detail: {
-            // Tab Content
+            // Tab Content with Adaptive Responsive Layouts
             Group {
                 switch uiState.selectedInspectorTab {
                 case .processes:
                     ProcessesInspectorView(collector: collector, uiState: uiState)
                 case .processor:
                     ProcessorInspectorView(collector: collector)
+                case .graphics:
+                    GraphicsInspectorView(collector: collector)
                 case .memory:
                     MemoryInspectorView(collector: collector)
                 case .network:
@@ -85,15 +121,19 @@ public struct InspectorWindowView: View {
                     DiskInspectorView(collector: collector)
                 case .battery:
                     BatteryInspectorView(collector: collector)
+                case .thermals:
+                    ThermalsInspectorView(collector: collector)
+                case .bluetooth:
+                    BluetoothInspectorView(collector: collector)
                 }
             }
-            .frame(minWidth: 640, minHeight: 520)
+            .frame(minWidth: 620, minHeight: 520)
             .background(Color(NSColor.windowBackgroundColor))
         }
     }
 }
 
-// MARK: - 1. Processes Inspector View
+// MARK: - 1. Processes Inspector View (Fluid Responsive Design)
 @MainActor
 struct ProcessesInspectorView: View {
     @ObservedObject var collector: MetricsCollector
@@ -103,19 +143,28 @@ struct ProcessesInspectorView: View {
         let text = uiState.processSearchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         var list = collector.allProcesses
         
+        // Filter by Mode: 0 = All, 1 = User Apps, 2 = System Daemons
+        if uiState.processFilterMode == 1 {
+            list = list.filter { !$0.isSystem }
+        } else if uiState.processFilterMode == 2 {
+            list = list.filter { $0.isSystem }
+        }
+        
+        // Filter by Search Query
         if !text.isEmpty {
             list = list.filter {
-                $0.name.lowercased().contains(text) || String($0.pid).contains(text)
+                $0.name.lowercased().contains(text) || String($0.pid).contains(text) || $0.user.lowercased().contains(text)
             }
         }
         
+        // Sort
         switch uiState.processSortField {
         case .cpu:
             list.sort { uiState.processSortAscending ? $0.cpuPercent < $1.cpuPercent : $0.cpuPercent > $1.cpuPercent }
         case .memory:
             list.sort { uiState.processSortAscending ? $0.memoryBytes < $1.memoryBytes : $0.memoryBytes > $1.memoryBytes }
         case .name:
-            list.sort { uiState.processSortAscending ? $0.name < $1.name : $0.name > $1.name }
+            list.sort { uiState.processSortAscending ? $0.name.localizedCompare($1.name) == .orderedAscending : $0.name.localizedCompare($1.name) == .orderedDescending }
         case .pid:
             list.sort { uiState.processSortAscending ? $0.pid < $1.pid : $0.pid > $1.pid }
         }
@@ -125,13 +174,16 @@ struct ProcessesInspectorView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Search & Controls Header
-            HStack(spacing: 12) {
-                HStack {
+            // Search, Filters & Controls Bar
+            HStack(spacing: 10) {
+                // Search Input
+                HStack(spacing: 6) {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
-                    TextField("Search processes by name or PID...", text: $uiState.processSearchText)
+                        .font(.system(size: 12))
+                    TextField("Search processes by name, PID, user...", text: $uiState.processSearchText)
                         .textFieldStyle(.plain)
+                        .font(.system(size: 12))
                     if !uiState.processSearchText.isEmpty {
                         Button(action: { uiState.processSearchText = "" }) {
                             Image(systemName: "xmark.circle.fill")
@@ -144,47 +196,89 @@ struct ProcessesInspectorView: View {
                 .padding(.vertical, 6)
                 .background(Color.primary.opacity(0.06))
                 .cornerRadius(8)
+                .frame(minWidth: 180, maxWidth: 300)
                 
-                Picker("Sort by", selection: $uiState.processSortField) {
-                    ForEach(ProcessSortField.allCases) { field in
-                        Text(field.rawValue).tag(field)
-                    }
+                // Filter Segmented Picker (All / Apps / System)
+                Picker("Filter", selection: $uiState.processFilterMode) {
+                    Text("All").tag(0)
+                    Text("Apps").tag(1)
+                    Text("System").tag(2)
                 }
-                .frame(width: 130)
-                
-                Button(action: { uiState.processSortAscending.toggle() }) {
-                    Image(systemName: uiState.processSortAscending ? "arrow.up" : "arrow.down")
-                }
-                .buttonStyle(.borderless)
+                .pickerStyle(.segmented)
+                .frame(width: 170)
                 
                 Spacer()
                 
-                Button("Launch Activity Monitor") {
+                // Launch Native Activity Monitor button
+                Button(action: {
                     NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
+                }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.up.forward.app")
+                            .font(.system(size: 11))
+                        Text("Activity Monitor")
+                            .font(.system(size: 11, weight: .medium))
+                    }
                 }
                 .buttonStyle(.bordered)
             }
-            .padding(14)
+            .padding(12)
             
-            Divider()
+            Divider().opacity(0.5)
             
-            // Table Header
-            HStack {
-                Text("Process Name")
-                    .frame(width: 220, alignment: .leading)
-                Text("PID")
-                    .frame(width: 60, alignment: .trailing)
+            // Responsive Table Header with Interactive Sort Headers
+            HStack(spacing: 8) {
+                // Process Name Header (Fluid Width)
+                Button(action: { toggleSort(field: .name) }) {
+                    HStack(spacing: 4) {
+                        Text("Process Name")
+                        sortIndicator(for: .name)
+                    }
+                    .frame(minWidth: 150, maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                
+                // PID
+                Button(action: { toggleSort(field: .pid) }) {
+                    HStack(spacing: 2) {
+                        Text("PID")
+                        sortIndicator(for: .pid)
+                    }
+                    .frame(width: 55, alignment: .trailing)
+                }
+                .buttonStyle(.plain)
+                
+                // User
                 Text("User")
-                    .frame(width: 80, alignment: .leading)
+                    .frame(width: 70, alignment: .leading)
+                
+                // Threads
                 Text("Threads")
-                    .frame(width: 70, alignment: .trailing)
-                Text("CPU %")
-                    .frame(width: 90, alignment: .trailing)
-                Text("Memory")
-                    .frame(width: 90, alignment: .trailing)
-                Spacer()
+                    .frame(width: 55, alignment: .trailing)
+                
+                // CPU %
+                Button(action: { toggleSort(field: .cpu) }) {
+                    HStack(spacing: 2) {
+                        Text("CPU %")
+                        sortIndicator(for: .cpu)
+                    }
+                    .frame(width: 65, alignment: .trailing)
+                }
+                .buttonStyle(.plain)
+                
+                // Memory
+                Button(action: { toggleSort(field: .memory) }) {
+                    HStack(spacing: 2) {
+                        Text("Memory")
+                        sortIndicator(for: .memory)
+                    }
+                    .frame(width: 75, alignment: .trailing)
+                }
+                .buttonStyle(.plain)
+                
+                // Action
                 Text("Action")
-                    .frame(width: 80, alignment: .center)
+                    .frame(width: 55, alignment: .center)
             }
             .font(.system(size: 11, weight: .semibold))
             .foregroundColor(.secondary)
@@ -192,101 +286,153 @@ struct ProcessesInspectorView: View {
             .padding(.vertical, 8)
             .background(Color.primary.opacity(0.03))
             
-            Divider()
+            Divider().opacity(0.5)
             
-            // Process List
+            // Responsive Process Rows List
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(filteredProcesses) { proc in
-                        HStack {
-                            // Process Name & Icon
+                        let isSelected = uiState.selectedProcessPID == proc.pid
+                        HStack(spacing: 8) {
+                            // Process Name & Icon (Fluid Adaptive Column)
                             HStack(spacing: 8) {
                                 Image(systemName: proc.isSystem ? "gearshape.2" : "app.fill")
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 12))
                                     .foregroundColor(proc.isSystem ? .secondary : MactivityTheme.sand)
+                                    .frame(width: 14)
+                                
                                 Text(proc.name)
                                     .font(.system(size: 12, weight: .medium))
                                     .lineLimit(1)
+                                    .truncationMode(.tail)
                             }
-                            .frame(width: 220, alignment: .leading)
+                            .frame(minWidth: 150, maxWidth: .infinity, alignment: .leading)
                             
                             // PID
                             Text("\(proc.pid)")
                                 .font(.system(size: 11, design: .monospaced))
                                 .foregroundColor(.secondary)
-                                .frame(width: 60, alignment: .trailing)
+                                .frame(width: 55, alignment: .trailing)
                             
                             // User
                             Text(proc.user)
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
-                                .frame(width: 80, alignment: .leading)
+                                .lineLimit(1)
+                                .frame(width: 70, alignment: .leading)
                             
                             // Threads
                             Text("\(proc.threadsCount)")
                                 .font(.system(size: 11, design: .monospaced))
                                 .foregroundColor(.secondary)
-                                .frame(width: 70, alignment: .trailing)
+                                .frame(width: 55, alignment: .trailing)
                             
                             // CPU %
                             Text(String(format: "%.1f%%", proc.cpuPercent))
                                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                                .foregroundColor(proc.cpuPercent > 50.0 ? .red : (proc.cpuPercent > 15.0 ? .orange : .primary))
-                                .frame(width: 90, alignment: .trailing)
+                                .foregroundColor(proc.cpuPercent > 50.0 ? .red : (proc.cpuPercent > 15.0 ? MactivityTheme.copper : .primary))
+                                .frame(width: 65, alignment: .trailing)
                             
                             // Memory
                             Text(proc.memoryString)
                                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                                .frame(width: 90, alignment: .trailing)
-                            
-                            Spacer()
+                                .foregroundColor(MactivityTheme.sand)
+                                .frame(width: 75, alignment: .trailing)
                             
                             // Force Quit Action
                             Button(action: {
                                 let _ = collector.killProcess(pid: proc.pid)
                             }) {
                                 Text("End")
-                                    .font(.system(size: 10, weight: .medium))
+                                    .font(.system(size: 10, weight: .semibold))
                                     .foregroundColor(.red)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(Color.red.opacity(0.10))
-                                    .cornerRadius(6)
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 2)
+                                    .background(Color.red.opacity(0.12))
+                                    .cornerRadius(4)
                             }
                             .buttonStyle(.plain)
-                            .frame(width: 80, alignment: .center)
+                            .frame(width: 55, alignment: .center)
                         }
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 6)
-                        .background(uiState.selectedProcessPID == proc.pid ? Color.blue.opacity(0.12) : Color.clear)
+                        .padding(.vertical, 5)
+                        .background(
+                            isSelected
+                            ? MactivityTheme.petrol.opacity(0.40)
+                            : (filteredProcesses.firstIndex(of: proc).map { $0 % 2 == 1 } ?? false ? Color.primary.opacity(0.015) : Color.clear)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(isSelected ? MactivityTheme.sand.opacity(0.50) : Color.clear, lineWidth: 0.8)
+                        )
                         .contentShape(Rectangle())
                         .onTapGesture {
                             uiState.selectedProcessPID = proc.pid
                         }
-                        
-                        Divider().opacity(0.3)
                     }
                 }
             }
+            
+            Divider().opacity(0.5)
+            
+            // Bottom Status Summary
+            HStack(spacing: 16) {
+                Text("\(filteredProcesses.count) Processes Listed")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                HStack(spacing: 12) {
+                    Text("Total CPU: \(String(format: "%.1f%%", collector.cpu.totalUsage))")
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .foregroundColor(MactivityTheme.sand)
+                    Text("RAM Used: \(collector.memory.usedGBString)")
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .foregroundColor(MactivityTheme.copper)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.primary.opacity(0.02))
+        }
+    }
+    
+    private func toggleSort(field: ProcessSortField) {
+        if uiState.processSortField == field {
+            uiState.processSortAscending.toggle()
+        } else {
+            uiState.processSortField = field
+            uiState.processSortAscending = (field == .name)
+        }
+    }
+    
+    @ViewBuilder
+    private func sortIndicator(for field: ProcessSortField) -> some View {
+        if uiState.processSortField == field {
+            Image(systemName: uiState.processSortAscending ? "arrow.up" : "arrow.down")
+                .font(.system(size: 9))
+                .foregroundColor(MactivityTheme.sand)
         }
     }
 }
 
-// MARK: - 2. Processor Inspector View
+// MARK: - 2. Processor Inspector View (CPU & M4 Pro Core Topology)
 struct ProcessorInspectorView: View {
     @ObservedObject var collector: MetricsCollector
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Header overview
+            VStack(alignment: .leading, spacing: 18) {
+                // Header Utilization Overview Card
                 HStack(alignment: .center, spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Processor Utilization")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.secondary)
                         Text(String(format: "%.1f%%", collector.cpu.totalUsage))
-                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
                         
                         HStack(spacing: 12) {
                             HStack(spacing: 4) {
@@ -307,26 +453,39 @@ struct ProcessorInspectorView: View {
                         }
                     }
                     Spacer()
-                    HistoryBarChart(totalData: collector.cpu.history, userPart: collector.cpu.userHistory, barCount: 24)
-                        .frame(width: 220, height: 75)
+                    HistoryBarChart(totalData: collector.cpu.history, userPart: collector.cpu.userHistory, barCount: 28)
+                        .frame(width: 240, height: 75)
                 }
                 .padding(16)
                 .background(Color.primary.opacity(0.04))
                 .cornerRadius(12)
                 
-                // All 14 M4 Pro Cores Grid
+                // Responsive Adaptive Core Topology Grid
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Apple M4 Pro Core Topology (\(collector.cpu.coreCount) Active Cores)")
-                        .font(.system(size: 13, weight: .bold))
+                    HStack {
+                        Text("Apple M4 Pro Core Topology (\(collector.cpu.coreCount) Active Cores)")
+                            .font(.system(size: 13, weight: .bold))
+                        Spacer()
+                        HStack(spacing: 10) {
+                            HStack(spacing: 4) {
+                                Circle().fill(MactivityTheme.sand).frame(width: 6, height: 6)
+                                Text("P-Cores (1-10)").font(.system(size: 10)).foregroundColor(.secondary)
+                            }
+                            HStack(spacing: 4) {
+                                Circle().fill(MactivityTheme.copper).frame(width: 6, height: 6)
+                                Text("E-Cores (1-4)").font(.system(size: 10)).foregroundColor(.secondary)
+                            }
+                        }
+                    }
                     
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 7), spacing: 10) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 68, maximum: 100), spacing: 8)], spacing: 8) {
                         ForEach(0..<collector.cpu.coreLoads.count, id: \.self) { idx in
                             let load = collector.cpu.coreLoads[idx]
-                            let isPCore = idx < 10 // First 10 are Performance cores on M4 Pro
+                            let isPCore = idx < 10
                             
                             VStack(spacing: 6) {
-                                Text(isPCore ? "P-Core \(idx + 1)" : "E-Core \(idx - 9)")
-                                    .font(.system(size: 10, weight: .semibold))
+                                Text(isPCore ? "P\(idx + 1)" : "E\(idx - 9)")
+                                    .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(isPCore ? MactivityTheme.sand : MactivityTheme.copper)
                                 
                                 GeometryReader { geo in
@@ -337,40 +496,154 @@ struct ProcessorInspectorView: View {
                                             .frame(height: max(4, geo.size.height * CGFloat(load / 100.0)))
                                     }
                                 }
-                                .frame(height: 60)
+                                .frame(height: 55)
                                 
                                 Text(String(format: "%.0f%%", load))
-                                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                                    .font(.system(size: 10, weight: .bold, design: .rounded))
                             }
                             .padding(8)
                             .background(Color.primary.opacity(0.03))
-                            .cornerRadius(10)
+                            .cornerRadius(8)
                         }
                     }
                 }
                 .padding(16)
                 .background(Color.primary.opacity(0.04))
                 .cornerRadius(12)
+                
+                // Hardware Architectural Specs Card
+                HStack(spacing: 14) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Architecture Details")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("Second-generation 3-nanometer transistor architecture with 273 GB/s unified memory bandwidth.")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("Hardware Acceleration")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(MactivityTheme.sand)
+                        Text("Hardware AV1 · Ray Tracing · 16-Core NPU")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(14)
+                .background(Color.primary.opacity(0.03))
+                .cornerRadius(10)
             }
-            .padding(20)
+            .padding(18)
         }
     }
 }
 
-// MARK: - 3. Memory Inspector View
+// MARK: - 3. Graphics Inspector View (Dedicated GPU Tab)
+struct GraphicsInspectorView: View {
+    @ObservedObject var collector: MetricsCollector
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                // Header GPU Overview
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Apple M4 Pro Graphics Processor")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        Text(String(format: "%.1f%%", collector.gpu.utilizationPercent))
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .foregroundColor(MactivityTheme.sand)
+                        Text("20-Core Hardware Accelerated GPU · Metal 3.2 Engine")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    
+                    // Utilization Gauge Bar
+                    VStack(alignment: .trailing, spacing: 6) {
+                        Text(collector.gpu.memoryUsedMBString)
+                            .font(.system(size: 16, weight: .bold, design: .monospaced))
+                            .foregroundColor(MactivityTheme.copper)
+                        Text("Active Shared VRAM")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(16)
+                .background(Color.primary.opacity(0.04))
+                .cornerRadius(12)
+                
+                // Adaptive Feature Tiles
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 350), spacing: 12)], spacing: 12) {
+                    GpuFeatureCard(title: "Hardware Ray Tracing", subtitle: "2nd Gen Geometry Engine", value: "Active", icon: "cube.transparent")
+                    GpuFeatureCard(title: "Dynamic Caching", subtitle: "On-Chip Memory Allocation", value: "Hardware Enabled", icon: "memorychip")
+                    GpuFeatureCard(title: "Mesh Shading", subtitle: "Complex Geometry Pipelines", value: "Supported", icon: "waveform.path.ecg")
+                    GpuFeatureCard(title: "ProMotion Display", subtitle: "Liquid Retina XDR", value: "120Hz Adaptive", icon: "display")
+                }
+                
+                // GPU Architecture Details
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Graphics & Display Subsystem")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("The Apple M4 Pro GPU architecture integrates dynamic caching to allocate local memory on hardware in real time, dramatically increasing GPU utilization for high-demand pro apps and gaming without CPU-bound scheduling overhead.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .lineSpacing(3)
+                }
+                .padding(16)
+                .background(Color.primary.opacity(0.04))
+                .cornerRadius(12)
+            }
+            .padding(18)
+        }
+    }
+}
+
+struct GpuFeatureCard: View {
+    var title: String
+    var subtitle: String
+    var value: String
+    var icon: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(MactivityTheme.sand)
+                Spacer()
+                Text(value)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(MactivityTheme.copper)
+            }
+            Text(title)
+                .font(.system(size: 12, weight: .bold))
+            Text(subtitle)
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+        }
+        .padding(12)
+        .background(Color.primary.opacity(0.03))
+        .cornerRadius(10)
+    }
+}
+
+// MARK: - 4. Memory Inspector View
 struct MemoryInspectorView: View {
     @ObservedObject var collector: MetricsCollector
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Unified Memory Status")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.secondary)
                         Text(String(format: "%.1f%%", collector.memory.usedPercent))
-                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
                         Text(collector.memory.usedGBString)
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
@@ -392,7 +665,7 @@ struct MemoryInspectorView: View {
                 .background(Color.primary.opacity(0.04))
                 .cornerRadius(12)
                 
-                // Detailed memory breakdown table
+                // Detailed Memory Breakdown Table
                 VStack(spacing: 10) {
                     MemoryStatRow(title: "App Memory (Active user applications)", bytes: collector.memory.appBytes, color: MactivityTheme.sand)
                     Divider().opacity(0.4)
@@ -408,7 +681,7 @@ struct MemoryInspectorView: View {
                 .background(Color.primary.opacity(0.04))
                 .cornerRadius(12)
             }
-            .padding(20)
+            .padding(18)
         }
     }
 }
@@ -431,13 +704,13 @@ struct MemoryStatRow: View {
     }
 }
 
-// MARK: - 4. Network Inspector View
+// MARK: - 5. Network Inspector View
 struct NetworkInspectorView: View {
     @ObservedObject var collector: MetricsCollector
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Active Interface (\(collector.network.interfaceName))")
@@ -472,14 +745,14 @@ struct NetworkInspectorView: View {
                     .background(Color.primary.opacity(0.04))
                     .cornerRadius(12)
                 
-                // Historical volume
-                HStack(spacing: 12) {
+                // Historical Volume Ledger Cards (Adaptive Grid)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 300), spacing: 12)], spacing: 12) {
                     DataVolumeCard(title: "Today", volume: collector.network.dataTodayBytes)
                     DataVolumeCard(title: "Last 7 Days", volume: collector.network.data7DaysBytes)
                     DataVolumeCard(title: "Last 30 Days", volume: collector.network.data30DaysBytes)
                 }
             }
-            .padding(20)
+            .padding(18)
         }
     }
 }
@@ -495,6 +768,7 @@ struct DataVolumeCard: View {
                 .foregroundColor(.secondary)
             Text(NetworkInfo.formatDataVolume(volume))
                 .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundColor(MactivityTheme.sand)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
@@ -503,14 +777,14 @@ struct DataVolumeCard: View {
     }
 }
 
-// MARK: - 5. Disk Inspector View
+// MARK: - 6. Disk & Volumes Inspector View
 struct DiskInspectorView: View {
     @ObservedObject var collector: MetricsCollector
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Mounted Storage & Remote Volumes")
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Mounted Storage & Volumes")
                     .font(.system(size: 14, weight: .bold))
                 
                 ForEach(collector.volumes) { vol in
@@ -551,26 +825,27 @@ struct DiskInspectorView: View {
                     .cornerRadius(10)
                 }
             }
-            .padding(20)
+            .padding(18)
         }
     }
 }
 
-// MARK: - 6. Battery Inspector View
+// MARK: - 7. Battery & Power Inspector View
 struct BatteryInspectorView: View {
     @ObservedObject var collector: MetricsCollector
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Apple Silicon Power & Battery")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.secondary)
                         Text("\(collector.battery.percentage)%")
-                            .font(.system(size: 40, weight: .bold, design: .rounded))
-                        Text(collector.battery.isACConnected ? "Connected to Power Adapter" : "Running on Battery")
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .foregroundColor(collector.battery.percentage > 20 ? MactivityTheme.sand : .red)
+                        Text(collector.battery.isACConnected ? "Connected to Power Adapter (AC)" : "Running on Battery Power")
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                     }
@@ -588,39 +863,350 @@ struct BatteryInspectorView: View {
                 .background(Color.primary.opacity(0.04))
                 .cornerRadius(12)
                 
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Processor Temperature")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
-                        Text(String(format: "%.0f°C  (%.0f°F)", collector.thermals.temperatureC, collector.thermals.temperatureF))
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                        Text(collector.thermals.status)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.green)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(Color.primary.opacity(0.04))
-                    .cornerRadius(10)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Dual Cooling Fans")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
-                        Text("L: \(collector.fans.leftRPM) · R: \(collector.fans.rightRPM) RPM")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                        Text(collector.fans.status)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(MactivityTheme.sand)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(Color.primary.opacity(0.04))
-                    .cornerRadius(10)
+                // Power Efficiency Telemetry
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180, maximum: 300), spacing: 12)], spacing: 12) {
+                    PowerMetricCard(title: "Charging State", value: collector.battery.isCharging ? "Charging" : (collector.battery.isACConnected ? "Fully Charged" : "Discharging"), icon: "bolt.fill")
+                    PowerMetricCard(title: "Battery Health", value: collector.battery.healthPercent >= 80 ? "Normal" : "Service Recommended", icon: "heart.fill")
+                    PowerMetricCard(title: "Battery Cycles", value: "\(collector.battery.cycleCount) / 1000", icon: "arrow.triangle.2.circlepath")
                 }
             }
-            .padding(20)
+            .padding(18)
         }
+    }
+}
+
+struct PowerMetricCard: View {
+    var title: String
+    var value: String
+    var icon: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(MactivityTheme.sand)
+                Spacer()
+            }
+            Text(title)
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.primary)
+        }
+        .padding(12)
+        .background(Color.primary.opacity(0.03))
+        .cornerRadius(10)
+    }
+}
+
+// MARK: - 8. Thermals & Fans Inspector View (Dedicated Telemetry Tab)
+struct ThermalsInspectorView: View {
+    @ObservedObject var collector: MetricsCollector
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                // Header Thermals Status
+                HStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Apple M4 Pro Thermal Envelope")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        Text(String(format: "%.0f°C", collector.thermals.temperatureC))
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
+                            .foregroundColor(collector.thermals.temperatureC > 85 ? .red : (collector.thermals.temperatureC > 70 ? MactivityTheme.copper : MactivityTheme.sand))
+                        Text("SoC Temperature: \(String(format: "%.0f°F", collector.thermals.temperatureF)) · \(collector.thermals.status)")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    ThermometerView(temperatureC: collector.thermals.temperatureC)
+                        .frame(width: 30, height: 75)
+                }
+                .padding(16)
+                .background(Color.primary.opacity(0.04))
+                .cornerRadius(12)
+                
+                // Dual Centrifugal Cooling Fans
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Dual Centrifugal Blowers Telemetry")
+                        .font(.system(size: 13, weight: .bold))
+                    
+                    HStack(spacing: 12) {
+                        FanCard(title: "Left Cooling Fan", rpm: collector.fans.leftRPM, status: collector.fans.status)
+                        FanCard(title: "Right Cooling Fan", rpm: collector.fans.rightRPM, status: collector.fans.status)
+                    }
+                }
+                .padding(16)
+                .background(Color.primary.opacity(0.04))
+                .cornerRadius(12)
+                
+                // Acoustic Profile Details
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Apple Silicon Acoustic Behavior")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("MacBook Pro M4 Pro utilizes dynamic thermals: fans remain completely silent (0 RPM) during day-to-day code editing and browsing, ramping up smoothly to disperse heat under heavy Xcode builds and GPU shaders.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .lineSpacing(3)
+                }
+                .padding(14)
+                .background(Color.primary.opacity(0.03))
+                .cornerRadius(10)
+            }
+            .padding(18)
+        }
+    }
+}
+
+struct FanCard: View {
+    var title: String
+    var rpm: Int
+    var status: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "fanblades")
+                    .font(.system(size: 16))
+                    .foregroundColor(rpm > 0 ? MactivityTheme.sand : .secondary)
+                Spacer()
+                Text(rpm > 0 ? "Active" : "Silent (0 RPM)")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(rpm > 0 ? MactivityTheme.sand : .green)
+            }
+            
+            Text("\(rpm) RPM")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+            
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.primary.opacity(0.08)).frame(height: 5)
+                    Capsule()
+                        .fill(MactivityTheme.sand)
+                        .frame(width: max(4, geo.size.width * CGFloat(min(1.0, Double(rpm) / 5800.0))), height: 5)
+                }
+            }
+            .frame(height: 5)
+            
+            Text(title)
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.primary.opacity(0.03))
+        .cornerRadius(10)
+    }
+}
+
+// MARK: - 9. Bluetooth Devices Inspector View (Dedicated Peripherals Section)
+struct BluetoothInspectorView: View {
+    @ObservedObject var collector: MetricsCollector
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                // Header Bluetooth Manager Overview
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Bluetooth Peripherals & Connected Devices")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        Text("Apple Silicon Wireless Core")
+                            .font(.system(size: 24, weight: .bold))
+                        Text("IOBluetooth & Apple HID Event Service Telemetry")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    
+                    // Quick Action: Open macOS Bluetooth Settings
+                    Button(action: {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.BluetoothSettings") {
+                            NSWorkspace.shared.open(url)
+                        } else {
+                            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/PreferencePanes/Bluetooth.prefPane"))
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "gearshape")
+                            Text("Bluetooth Settings")
+                        }
+                        .font(.system(size: 11, weight: .medium))
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(16)
+                .background(Color.primary.opacity(0.04))
+                .cornerRadius(12)
+                
+                // Connected Peripheral Cards Grid (Responsive Adaptive Layout)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Paired & Active Devices (\(collector.bluetoothDevices.filter { $0.isConnected }.count) Connected)")
+                            .font(.system(size: 13, weight: .bold))
+                        Spacer()
+                        HStack(spacing: 6) {
+                            Circle().fill(Color.green).frame(width: 6, height: 6)
+                            Text("Bluetooth 5.3 Ready")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 260, maximum: 400), spacing: 12)], spacing: 12) {
+                        ForEach(collector.bluetoothDevices) { dev in
+                            BluetoothDeviceCard(device: dev)
+                        }
+                    }
+                }
+                
+                // Bluetooth Diagnostic & Power Advice Card
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .foregroundColor(MactivityTheme.sand)
+                        Text("Apple Peripheral Management")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    Text("Battery levels for AirPods, Magic Keyboard, Magic Trackpad, and third-party BLE accessories are polled directly through macOS IOKit service matching without keeping battery-draining polling daemons active.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .lineSpacing(3)
+                }
+                .padding(14)
+                .background(Color.primary.opacity(0.03))
+                .cornerRadius(10)
+            }
+            .padding(18)
+        }
+    }
+}
+
+struct BluetoothDeviceCard: View {
+    var device: BluetoothPeripheral
+    
+    var iconName: String {
+        switch device.type {
+        case .headphones: return "airpodspro"
+        case .keyboard: return "keyboard"
+        case .trackpad: return "trackpad"
+        case .mouse: return "computermouse"
+        case .phone: return "iphone"
+        case .placeholder: return "plus.circle.dashed"
+        }
+    }
+    
+    var typeTitle: String {
+        switch device.type {
+        case .headphones: return "Audio Accessory"
+        case .keyboard: return "Magic Keyboard"
+        case .trackpad: return "Precision Trackpad"
+        case .mouse: return "Pointing Device"
+        case .phone: return "iOS Companion"
+        case .placeholder: return "Ready for Pairing"
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Header: Device Icon & Name
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(device.isConnected ? MactivityTheme.petrol : Color.primary.opacity(0.05))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: iconName)
+                        .font(.system(size: 16))
+                        .foregroundColor(device.isConnected ? MactivityTheme.sand : .secondary)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(device.name)
+                        .font(.system(size: 13, weight: .bold))
+                        .lineLimit(1)
+                    Text(typeTitle)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if device.isConnected {
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.green).frame(width: 6, height: 6)
+                        Text("Connected")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    Text("Slot Available")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Divider().opacity(0.3)
+            
+            // Battery Status Bar & Number
+            if let battery = device.batteryLevel, device.isConnected {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Battery Power")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(battery)%")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(battery > 40 ? MactivityTheme.sand : (battery > 20 ? MactivityTheme.copper : .red))
+                    }
+                    
+                    // Battery Progress Capsule
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.primary.opacity(0.08)).frame(height: 6)
+                            Capsule()
+                                .fill(battery > 40 ? MactivityTheme.sand : (battery > 20 ? MactivityTheme.copper : .red))
+                                .frame(width: max(6, geo.size.width * CGFloat(Double(battery) / 100.0)), height: 6)
+                        }
+                    }
+                    .frame(height: 6)
+                    
+                    Text(battery > 20 ? "Optimal Battery Health" : "Low Battery — Charge Peripheral")
+                        .font(.system(size: 9))
+                        .foregroundColor(battery > 20 ? .secondary : .red)
+                }
+            } else if device.isConnected {
+                HStack {
+                    Text("Power Source")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("Active / AC Powered")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(MactivityTheme.sand)
+                }
+            } else {
+                HStack {
+                    Text("Connect via Bluetooth Settings")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.primary.opacity(0.03))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(device.isConnected ? MactivityTheme.slate.opacity(0.50) : Color.primary.opacity(0.06), lineWidth: 0.8)
+        )
+        .cornerRadius(12)
     }
 }
