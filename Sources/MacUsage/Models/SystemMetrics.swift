@@ -26,6 +26,24 @@ public struct CPUInfo: Equatable {
             return "\(coreCount) Cores"
         }
     }
+    
+    public var deviceIconName: String {
+        let lower = machineName.lowercased()
+        if lower.contains("air") {
+            return "laptopcomputer"
+        } else if lower.contains("macbook") {
+            return "laptopcomputer"
+        } else if lower.contains("mini") {
+            return "macmini"
+        } else if lower.contains("studio") {
+            return "macstudio"
+        } else if lower.contains("pro") && !lower.contains("macbook") {
+            return "macpro.gen3"
+        } else if lower.contains("imac") {
+            return "desktopcomputer"
+        }
+        return "laptopcomputer"
+    }
 }
 
 public struct MemoryInfo: Equatable {

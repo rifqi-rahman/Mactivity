@@ -21,8 +21,8 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     }
     
     private func setupStatusItem() {
-        // Fixed length (92.0 pt) ensures the menu bar button NEVER resizes or shifts the popover anchor!
-        statusItem = NSStatusBar.system.statusItem(withLength: 92.0)
+        // Dynamic variable length allows smooth adaptation to whichever metric the user selects!
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem.button {
             button.target = self
@@ -42,7 +42,6 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     }
     
     private func observeCollector() {
-        // Coalesced timer to refresh status bar text smoothly
         updateTimer?.invalidate()
         let t = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -54,28 +53,83 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         self.updateTimer = t
     }
     
+    private func formatSpeed(_ bytesPerSec: Double) -> String {
+        if bytesPerSec >= 1_048_576 {
+            return String(format: "%.1fM", bytesPerSec / 1_048_576.0)
+        } else if bytesPerSec >= 1024 {
+            return String(format: "%.0fK", bytesPerSec / 1024.0)
+        } else {
+            return String(format: "%.0fB", bytesPerSec)
+        }
+    }
+    
     @MainActor
     public func updateStatusItemTitle() {
         guard let button = statusItem.button else { return }
         
+        let mode = UIState.shared.menuBarMetricMode
+        let imageConfig = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+        
         let cpuPct = Int(round(collector.cpu.totalUsage))
+        let memPct = Int(round(collector.memory.usedPercent))
         let netDown = collector.network.downloadBytesPerSec
-        let netString: String
-        if netDown >= 1_048_576 {
-            netString = String(format: "%.1fM", netDown / 1_048_576.0)
-        } else if netDown >= 1024 {
-            netString = String(format: "%.0fK", netDown / 1024.0)
-        } else {
-            netString = String(format: "%.0fB", netDown)
+        let netUp = collector.network.uploadBytesPerSec
+        let tempC = Int(round(collector.thermals.temperatureC))
+        let battPct = collector.battery.percentage
+        let hasBatt = collector.battery.hasBattery
+        let isCharging = collector.battery.isCharging
+        
+        let icon: NSImage?
+        let title: String
+        
+        switch mode {
+        case .cpuAndNetwork:
+            icon = NSImage(systemSymbolName: "gauge.with.needle", accessibilityDescription: "CPU & Net")?.withSymbolConfiguration(imageConfig)
+            title = " \(cpuPct)%  ↓\(formatSpeed(netDown))"
+            
+        case .cpuOnly:
+            icon = NSImage(systemSymbolName: "cpu", accessibilityDescription: "CPU")?.withSymbolConfiguration(imageConfig)
+            title = " \(cpuPct)%"
+            
+        case .cpuAndMemory:
+            icon = NSImage(systemSymbolName: "memorychip", accessibilityDescription: "CPU & RAM")?.withSymbolConfiguration(imageConfig)
+            title = " \(cpuPct)% · \(memPct)%"
+            
+        case .memoryOnly:
+            icon = NSImage(systemSymbolName: "memorychip", accessibilityDescription: "Memory")?.withSymbolConfiguration(imageConfig)
+            title = " \(memPct)% RAM"
+            
+        case .battery:
+            if hasBatt {
+                let bolt = isCharging ? "⚡" : ""
+                let battSymbol = isCharging ? "battery.100.bolt" : (battPct > 20 ? "battery.75" : "battery.25")
+                icon = NSImage(systemSymbolName: battSymbol, accessibilityDescription: "Battery")?.withSymbolConfiguration(imageConfig)
+                title = " \(battPct)%\(bolt)"
+            } else {
+                icon = NSImage(systemSymbolName: "powerplug", accessibilityDescription: "AC Power")?.withSymbolConfiguration(imageConfig)
+                title = " AC"
+            }
+            
+        case .networkOnly:
+            icon = NSImage(systemSymbolName: "network", accessibilityDescription: "Network")?.withSymbolConfiguration(imageConfig)
+            title = " ↓\(formatSpeed(netDown)) ↑\(formatSpeed(netUp))"
+            
+        case .temperature:
+            icon = NSImage(systemSymbolName: "thermometer.medium", accessibilityDescription: "Thermals")?.withSymbolConfiguration(imageConfig)
+            title = " \(tempC)°C"
+            
+        case .compactAll:
+            icon = NSImage(systemSymbolName: "gauge.with.needle", accessibilityDescription: "All")?.withSymbolConfiguration(imageConfig)
+            title = " C:\(cpuPct)% M:\(memPct)% ↓\(formatSpeed(netDown))"
+            
+        case .iconOnly:
+            icon = NSImage(systemSymbolName: "gauge.with.needle.fill", accessibilityDescription: "Mactivity")?.withSymbolConfiguration(imageConfig)
+            title = ""
         }
         
-        // Crisp symbol and monospaced typography
-        let imageConfig = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
-        let icon = NSImage(systemSymbolName: "gauge.with.needle", accessibilityDescription: "Mactivity")?.withSymbolConfiguration(imageConfig)
-        
         button.image = icon
-        button.imagePosition = .imageLeft
-        button.title = " \(cpuPct)%  ↓\(netString)"
+        button.imagePosition = title.isEmpty ? .imageOnly : .imageLeft
+        button.title = title
         button.font = NSFont.monospacedDigitSystemFont(ofSize: 11.5, weight: .medium)
     }
     
@@ -97,7 +151,7 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         }
     }
     
-    // MARK: - NSPopoverDelegate (Visibility awareness for extreme battery/CPU savings)
+    // MARK: - NSPopoverDelegate
     public func popoverWillShow(_ notification: Notification) {
         collector.setPopoverVisibility(true)
     }
@@ -112,6 +166,28 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         menu.addItem(NSMenuItem(title: "Mactivity · \(collector.cpu.chipName)", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         
+        // Menu Bar Display Submenu
+        let displaySubmenu = NSMenu()
+        for mode in MenuBarMetricMode.allCases {
+            let item = NSMenuItem(title: mode.rawValue, action: #selector(setMetricModeAction(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = mode
+            if UIState.shared.menuBarMetricMode == mode {
+                item.state = .on
+            }
+            displaySubmenu.addItem(item)
+        }
+        
+        let displayMenuItem = NSMenuItem(title: "Menu Bar Display", action: nil, keyEquivalent: "")
+        displayMenuItem.submenu = displaySubmenu
+        menu.addItem(displayMenuItem)
+        
+        // Customize Popover Layout
+        let customizeItem = NSMenuItem(title: "Customize Bento Layout (Drag & Edit)...", action: #selector(customizeBentoAction), keyEquivalent: "e")
+        customizeItem.target = self
+        menu.addItem(customizeItem)
+        
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Open Dashboard Popover", action: #selector(openDashboardAction), keyEquivalent: "d"))
         menu.addItem(NSMenuItem(title: "Open Full Inspector Window...", action: #selector(openInspectorWindowAction), keyEquivalent: "o"))
         menu.addItem(NSMenuItem(title: "Launch Activity Monitor", action: #selector(openActivityMonitorAction), keyEquivalent: "a"))
@@ -123,6 +199,21 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil // Restore toggle behavior after click
+    }
+    
+    @objc private func setMetricModeAction(_ sender: NSMenuItem) {
+        if let mode = sender.representedObject as? MenuBarMetricMode {
+            UIState.shared.setMenuBarMetricMode(mode)
+            updateStatusItemTitle()
+        }
+    }
+    
+    @objc private func customizeBentoAction() {
+        UIState.shared.isEditBentoLayoutMode = true
+        if let button = statusItem.button, !popover.isShown {
+            collector.setPopoverVisibility(true)
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        }
     }
     
     @objc private func openInspectorWindowAction() {

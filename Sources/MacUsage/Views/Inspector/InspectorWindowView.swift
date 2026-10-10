@@ -169,16 +169,20 @@ struct DashboardInspectorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                // Header Profile & Live Telemetry Banner
                 HStack(alignment: .center, spacing: 16) {
-                    if let icon = NSApp.applicationIconImage {
-                        Image(nsImage: icon)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 42, height: 42)
-                            .cornerRadius(10)
-                            .shadow(color: Color.black.opacity(0.30), radius: 4, x: 0, y: 2)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(MactivityTheme.petrol)
+                            .frame(width: 44, height: 44)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(MactivityTheme.sand.opacity(0.35), lineWidth: 1)
+                            )
+                        Image(systemName: collector.cpu.deviceIconName)
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundColor(MactivityTheme.sand)
                     }
+                    .shadow(color: Color.black.opacity(0.25), radius: 4, x: 0, y: 2)
                     
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 8) {
