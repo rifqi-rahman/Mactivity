@@ -346,7 +346,7 @@ function initCopyButton() {
   const text = document.getElementById('copyBtnText');
   if (!btn || !text) return;
 
-  const cmd = `git clone https://github.com/rifqirahman/mac-usage.git && cd mac-usage && ./build.sh && open build/Mactivity.app`;
+  const cmd = `git clone https://github.com/rifqirahman/Mactivity.git && cd Mactivity && ./build.sh && open build/Mactivity.app`;
 
   btn.addEventListener('click', async () => {
     try {

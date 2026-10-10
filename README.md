@@ -8,7 +8,7 @@
 *Engineered with Swift 6 & SwiftUI · Direct Mach Kernel Telemetry · Zero Mock Data · Architectural Bento Grid*
 
 <p align="center">
-  <a href="https://rifqirahman.github.io/mac-usage/"><img src="https://img.shields.io/badge/Live%20Website-Mactivity%20Showcase-D99B7F?style=for-the-badge&logo=safari&logoColor=black" alt="Live Website" /></a>
+  <a href="https://rifqirahman.github.io/Mactivity/"><img src="https://img.shields.io/badge/Live%20Website-Mactivity%20Showcase-D99B7F?style=for-the-badge&logo=safari&logoColor=black" alt="Live Website" /></a>
   <a href="#-key-features"><img src="https://img.shields.io/badge/Platform-macOS%2014.0%2B%20(Sonoma%20%7C%20Sequoia)-0F3040?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="#-universal-mac-hardware-intelligence"><img src="https://img.shields.io/badge/Architecture-Apple%20Silicon%20(M1--M4)%20%26%20Intel-A56F63?style=for-the-badge&logo=apple&logoColor=white" alt="Apple Silicon & Intel" /></a>
   <a href="#-tech-stack--performance"><img src="https://img.shields.io/badge/Language-Swift%206.0%20%7C%20SwiftUI-D99B7F?style=for-the-badge&logo=swift&logoColor=white" alt="Swift 6" /></a>
@@ -142,8 +142,8 @@ Mactivity is styled with a bespoke **Nordic Architectural Palette**, delivering 
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/rifqirahman/mac-usage.git
-cd mac-usage
+git clone https://github.com/rifqirahman/Mactivity.git
+cd Mactivity
 ```
 
 ### 2. Build the Native App Bundle
@@ -184,7 +184,7 @@ To keep Mactivity active across system restarts:
 ## 📂 Project Architecture
 
 ```
-mac-usage/
+Mactivity/
 ├── assets/
 │   └── icon.png                       # High-res 1024x1024 application icon
 ├── Mactivity.icon/                    # macOS App Icon asset catalog
@@ -228,7 +228,7 @@ mac-usage/
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!  
-Feel free to check out the [issues page](https://github.com/rifqirahman/mac-usage/issues) if you want to contribute or submit a pull request.
+Feel free to check out the [issues page](https://github.com/rifqirahman/Mactivity/issues) if you want to contribute or submit a pull request.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
