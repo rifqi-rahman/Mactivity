@@ -18,11 +18,10 @@
 
 <p align="center">
   <a href="#-overview">Overview</a> •
+  <a href="#-visual-interface--screenshots">Screenshots</a> •
   <a href="#-key-features">Key Features</a> •
   <a href="#-universal-mac-hardware-intelligence">Hardware Intelligence</a> •
-  <a href="#-interactive-bento-customization">Customization</a> •
-  <a href="#-palette--design-system">Design System</a> •
-  <a href="#-getting-started">Getting Started</a>
+  <a href="#-getting-started--installation">Getting Started</a>
 </p>
 
 ---
@@ -36,6 +35,36 @@
 Unlike conventional monitoring utilities that spawn resource-heavy background shell commands (`top`, `pmset`, `netstat`), Mactivity communicates directly with the **Mach Kernel (`host_statistics64`, `vm_statistics64`)**, **IOKit registry**, and **Darwin `libproc` subsystems**. The result is immediate, sub-second telemetry with virtually zero overhead (**~20 MB RAM** and **<0.3% CPU**).
 
 Whether you are running a fanless **MacBook Air**, a high-core-count **MacBook Pro**, a compact **Mac mini**, or a **Mac Studio / Mac Pro workstation**, Mactivity dynamically adapts to your exact hardware without a single line of mock data.
+
+---
+
+## 📸 Visual Interface & Screenshots
+
+<div align="center">
+
+### 🍱 1. Floating Menu Bar Bento Dashboard
+<p align="center">
+  <img src="assets/bento-popover.png" width="460" alt="Mactivity Floating Bento Dashboard" style="border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.5);" />
+</p>
+<sub><i><b>Menu Bar Bento Dashboard</b>: Live telemetry pill in the macOS menu bar, dual-column glassmorphic cards, fan RPM tachometer, die thermals, network bandwidth, and genuine Bluetooth peripheral battery indicators.</i></sub>
+
+<br><br>
+
+### 🖥️ 2. Panoramic macOS Inspector App (Overview Tab)
+<p align="center">
+  <img src="assets/inspector-dashboard.png" width="880" alt="Mactivity Dedicated Inspector Window" style="border-radius: 12px; box-shadow: 0 20px 48px rgba(0,0,0,0.6);" />
+</p>
+<sub><i><b>Panoramic Inspector Window</b>: Dedicated multi-tab desktop application with full-width clickable sidebar, cluster loads (P-Cores vs. E-Cores), unified memory composition, GPU activity, and SoC architecture.</i></sub>
+
+<br><br>
+
+### ⚡ 3. Real-Time Process Explorer & Instant Termination
+<p align="center">
+  <img src="assets/inspector-processes.png" width="880" alt="Mactivity Process Manager" style="border-radius: 12px; box-shadow: 0 20px 48px rgba(0,0,0,0.6);" />
+</p>
+<sub><i><b>Process Manager</b>: Low-overhead Darwin libproc kernel process table monitor with CPU/RAM usage ranking and instant one-click process termination.</i></sub>
+
+</div>
 
 ---
 
@@ -92,23 +121,6 @@ Mactivity inspects your Mac's hardware tree at launch and configures its monitor
 | **Thermal & Blowers** | Dual Centrifugal Fans (Left & Right RPM) | **Fanless Passive Cooling** (0 dB, 0 RPM) | Single or Multi-Fan Blowers | Desktop thermal management |
 | **Power Architecture** | Battery Health %, Cycles, Charging State | Battery Health %, Cycles, Charging State | **Desktop AC Mode**: Direct Mains Power Rail | AC / Battery / UPS detection |
 | **Bluetooth Peripherals** | Genuine peripheral battery (Magic Mouse, Keyboard, AirPods, MX Master) | Genuine peripheral battery | Genuine peripheral battery | Genuine peripheral battery |
-
----
-
-## 🎨 Palette & Design System
-
-Mactivity is styled with a bespoke **Nordic Architectural Palette**, delivering a calm, focused, and distraction-free aesthetic that complements macOS Sonoma, Sequoia, and Dark Mode:
-
-<div align="center">
-
-| Color Token | Hex Code | Visual Swatch | Primary Role |
-| :--- | :---: | :---: | :--- |
-| **Midnight Petrol Teal** | `#0F3040` | `■` | Deep matte canvas background & frosted card glass |
-| **Muted Slate Gray** | `#464858` | `■` | Structural borders, card dividers, inactive track bars |
-| **Muted Terracotta Rose** | `#A56F63` | `■` | System load, upload bandwidth, remote volumes, secondary gauges |
-| **Warm Sand Peach** | `#D99B7F` | `■` | User load, download bandwidth, active highlights, primary gauges |
-
-</div>
 
 ---
 

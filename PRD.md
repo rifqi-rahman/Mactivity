@@ -111,14 +111,14 @@ Mactivity satisfies all requested monitoring capabilities across 11 dedicated fu
 ## 5. UI/UX & Design System Specifications
 
 ### 5.1. Signature Architectural Color Palette & Design System
-Mactivity utilizes a bespoke architectural Nordic Terracotta & Midnight Teal palette designed to stand distinct from generic neon utility monitors:
+Mactivity utilizes a bespoke architectural **Nordic Terracotta & Midnight Teal** palette designed to stand distinct from generic neon utility monitors:
 
-| Token Name | Hex Code | RGB | Purpose & Semantic Role |
-| :--- | :--- | :--- | :--- |
-| **Midnight Petrol** | `#0F3040` | `rgb(15, 48, 64)` | Deep canvas background, card backing, container fill, active tab pill background |
-| **Muted Slate** | `#464858` | `rgb(70, 72, 88)` | Structural card borders, dividers, track bases, inactive glyphs, subtle outlines |
-| **Terracotta Copper** | `#A56F63` | `rgb(165, 111, 99)` | System CPU utilization, upload throughput (↑), wired memory segment, warning thermals |
-| **Warm Sand Peach** | `#D99B7F` | `rgb(217, 155, 127)` | User CPU utilization, download throughput (↓), app memory segment, active accents, primary badges |
+| Color Token | Hex Code | Visual Swatch | RGB Value | Semantic Role & Purpose |
+| :--- | :---: | :---: | :--- | :--- |
+| **Midnight Petrol Teal** | `#0F3040` | `■` | `rgb(15, 48, 64)` | Deep matte canvas background, card backing, container fill, frosted card glass |
+| **Muted Slate Gray** | `#464858` | `■` | `rgb(70, 72, 88)` | Structural borders, card dividers, inactive track bars, subtle outlines |
+| **Muted Terracotta Rose** | `#A56F63` | `■` | `rgb(165, 111, 99)` | System load, upload bandwidth (↑), remote volumes, secondary gauges |
+| **Warm Sand Peach** | `#D99B7F` | `■` | `rgb(217, 155, 127)` | User load, download bandwidth (↓), active highlights, primary gauges |
 
 - **Background Styling**: Frosted glass backing using native macOS `NSVisualEffectView` (`.behindWindow` blending, `.popover` material) layered with `MactivityTheme.petrol.opacity(0.40)`.
 - **Card Styling**: 16pt corner radius, `MactivityTheme.cardBg` (`#0F3040` @ 90% opacity), `0.8pt` border stroke with `MactivityTheme.slate`, and warm sand hover glow effects (`#D99B7F` @ 20% shadow opacity).
