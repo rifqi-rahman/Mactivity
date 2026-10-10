@@ -7,6 +7,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        
+        if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns") ?? Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
+           let iconImg = NSImage(contentsOf: iconURL) {
+            NSApp.applicationIconImage = iconImg
+        }
+        
         menuBarController = MenuBarController(collector: MetricsCollector.shared)
         print("Mactivity started successfully on \(MetricsCollector.shared.cpu.machineName) (\(MetricsCollector.shared.cpu.chipName))")
     }

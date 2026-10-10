@@ -37,6 +37,12 @@ swiftc -parse-as-library -module-cache-path ".build/ModuleCache" \
   -o "$MACOS_DIR/$APP_NAME"
 
 cp Resources/Info.plist "$CONTENTS/Info.plist"
+if [ -f "Resources/AppIcon.icns" ]; then
+  cp Resources/AppIcon.icns "$RESOURCES_DIR/AppIcon.icns"
+fi
+if [ -f "Mactivity.icon/Mactivity-iOS-Default-1024@1x.png" ]; then
+  cp "Mactivity.icon/Mactivity-iOS-Default-1024@1x.png" "$RESOURCES_DIR/AppIcon.png"
+fi
 echo -n "APPL????" > "$CONTENTS/PkgInfo"
 
 echo "==> Successfully created $APP_BUNDLE"

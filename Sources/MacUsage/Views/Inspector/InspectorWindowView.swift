@@ -25,9 +25,18 @@ public struct InspectorWindowView: View {
                     uiState.selectedInspectorTab = .dashboard
                 }) {
                     HStack(spacing: 10) {
-                        Image(systemName: "macbook.gen2")
-                            .font(.system(size: 24))
-                            .foregroundColor(MactivityTheme.sand)
+                        if let icon = NSApp.applicationIconImage {
+                            Image(nsImage: icon)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 30, height: 30)
+                                .cornerRadius(7)
+                                .shadow(color: Color.black.opacity(0.25), radius: 3, x: 0, y: 1.5)
+                        } else {
+                            Image(systemName: "macbook.gen2")
+                                .font(.system(size: 24))
+                                .foregroundColor(MactivityTheme.sand)
+                        }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(collector.cpu.chipName)
                                 .font(.system(size: 13, weight: .bold))
@@ -162,6 +171,15 @@ struct DashboardInspectorView: View {
             VStack(alignment: .leading, spacing: 18) {
                 // Header Profile & Live Telemetry Banner
                 HStack(alignment: .center, spacing: 16) {
+                    if let icon = NSApp.applicationIconImage {
+                        Image(nsImage: icon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 42, height: 42)
+                            .cornerRadius(10)
+                            .shadow(color: Color.black.opacity(0.30), radius: 4, x: 0, y: 2)
+                    }
+                    
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 8) {
                             Text(collector.cpu.machineName)
