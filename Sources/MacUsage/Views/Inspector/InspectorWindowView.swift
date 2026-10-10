@@ -1043,10 +1043,10 @@ struct BluetoothInspectorView: View {
                 .background(Color.primary.opacity(0.04))
                 .cornerRadius(12)
                 
-                // Connected Peripheral Cards Grid (Responsive Adaptive Layout)
+                // Active Connected Peripheral Cards Grid
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Paired & Active Devices (\(collector.bluetoothDevices.filter { $0.isConnected }.count) Connected)")
+                        Text("Active Connected Devices (\(collector.connectedBluetoothDevices.count) Connected)")
                             .font(.system(size: 13, weight: .bold))
                         Spacer()
                         HStack(spacing: 6) {
@@ -1057,9 +1057,43 @@ struct BluetoothInspectorView: View {
                         }
                     }
                     
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 260, maximum: 400), spacing: 12)], spacing: 12) {
-                        ForEach(collector.bluetoothDevices) { dev in
-                            BluetoothDeviceCard(device: dev)
+                    if collector.connectedBluetoothDevices.isEmpty {
+                        HStack(spacing: 12) {
+                            Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                                .font(.system(size: 20))
+                                .foregroundColor(.secondary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("No Active Bluetooth Peripherals")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text("Connect a Bluetooth mouse, keyboard, or headset via System Settings.")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                        }
+                        .padding(16)
+                        .background(Color.primary.opacity(0.03))
+                        .cornerRadius(10)
+                    } else {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 260, maximum: 400), spacing: 12)], spacing: 12) {
+                            ForEach(collector.connectedBluetoothDevices) { dev in
+                                BluetoothDeviceCard(device: dev)
+                            }
+                        }
+                    }
+                }
+                
+                // Saved / Paired Inactive Devices (if any)
+                if !collector.pairedBluetoothDevices.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Paired & Saved Devices (\(collector.pairedBluetoothDevices.count) Offline)")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.secondary)
+                        
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 260, maximum: 400), spacing: 12)], spacing: 12) {
+                            ForEach(collector.pairedBluetoothDevices) { dev in
+                                BluetoothDeviceCard(device: dev)
+                            }
                         }
                     }
                 }
@@ -1069,10 +1103,10 @@ struct BluetoothInspectorView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .foregroundColor(MactivityTheme.sand)
-                        Text("Apple Peripheral Management")
+                        Text("Apple Silicon Peripheral Management")
                             .font(.system(size: 12, weight: .bold))
                     }
-                    Text("Battery levels for AirPods, Magic Keyboard, Magic Trackpad, and third-party BLE accessories are polled directly through macOS IOKit service matching without keeping battery-draining polling daemons active.")
+                    Text("Battery telemetry for wireless mice, keyboards, audio devices, and BLE peripherals is retrieved directly from macOS core Bluetooth subsystems without unnecessary background polling drain.")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .lineSpacing(3)
@@ -1091,7 +1125,7 @@ struct BluetoothDeviceCard: View {
     
     var iconName: String {
         switch device.type {
-        case .headphones: return "airpodspro"
+        case .headphones: return "headphones"
         case .keyboard: return "keyboard"
         case .trackpad: return "trackpad"
         case .mouse: return "computermouse"
@@ -1102,11 +1136,11 @@ struct BluetoothDeviceCard: View {
     
     var typeTitle: String {
         switch device.type {
-        case .headphones: return "Audio Accessory"
-        case .keyboard: return "Magic Keyboard"
-        case .trackpad: return "Precision Trackpad"
-        case .mouse: return "Pointing Device"
-        case .phone: return "iOS Companion"
+        case .headphones: return "Wireless Audio"
+        case .keyboard: return "Wireless Keyboard"
+        case .trackpad: return "Wireless Trackpad"
+        case .mouse: return "Bluetooth Mouse"
+        case .phone: return "Apple Device"
         case .placeholder: return "Ready for Pairing"
         }
     }

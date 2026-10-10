@@ -324,12 +324,13 @@ public struct BluetoothCardView: View {
     }
     
     public var body: some View {
+        let connectedCount = devices.filter { $0.isConnected }.count
         BentoCardContainer(
             title: "Bluetooth Devices",
-            icon: "headphones",
+            icon: "antenna.radiowaves.left.and.right",
             targetTab: .bluetooth,
-            unitDetail: "Bluetooth 5.3 · Active Peripherals",
-            badge: nil,
+            unitDetail: "\(connectedCount) Connected · BLE 5.3",
+            badge: connectedCount > 0 ? "\(connectedCount) Active" : "No Devices",
             height: 150
         ) { isHovered in
             HStack(spacing: 8) {

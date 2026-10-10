@@ -18,6 +18,8 @@ public class MetricsCollector: ObservableObject {
     @Published public var thermals = ThermalInfo()
     @Published public var gpu = GPUInfo()
     @Published public var bluetoothDevices: [BluetoothPeripheral] = []
+    @Published public var connectedBluetoothDevices: [BluetoothPeripheral] = []
+    @Published public var pairedBluetoothDevices: [BluetoothPeripheral] = []
     @Published public var topProcessesCPU: [ProcessItem] = []
     @Published public var topProcessesMemory: [ProcessItem] = []
     @Published public var allProcesses: [ProcessItem] = []
@@ -636,62 +638,130 @@ public class MetricsCollector: ObservableObject {
         fans.history.append(fans.leftRPM)
     }
     
-    // MARK: - Bluetooth Devices Sampling
+    // MARK: - Bluetooth Devices Sampling (Genuine macOS System Telemetry)
     private func sampleBluetooth() {
-        autoreleasepool {
-            var devices: [BluetoothPeripheral] = []
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self = self else { return }
             
-            let classesToSearch = ["AppleDeviceManagementHIDEventService", "IOBluetoothDevice", "BNBMouseDevice", "BNBTrackpadDevice"]
-            for className in classesToSearch {
-                guard let matching = IOServiceMatching(className) else { continue }
-                var iterator: io_iterator_t = 0
-                if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS {
-                    var service = IOIteratorNext(iterator)
-                    while service != 0 {
-                        var props: Unmanaged<CFMutableDictionary>?
-                        if IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
-                           let dict = props?.takeRetainedValue() as? [String: Any] {
-                            let name = dict["Product"] as? String ?? dict["Name"] as? String ?? ""
-                            let battery = dict["BatteryPercent"] as? Int ?? dict["BatteryLevel"] as? Int
-                            
-                            if !name.isEmpty && battery != nil {
-                                let type: PeripheralType
-                                let lower = name.lowercased()
-                                if lower.contains("airpod") || lower.contains("headphone") || lower.contains("beats") {
-                                    type = .headphones
-                                } else if lower.contains("keyboard") {
-                                    type = .keyboard
-                                } else if lower.contains("trackpad") {
-                                    type = .trackpad
-                                } else if lower.contains("mouse") {
-                                    type = .mouse
-                                } else {
-                                    type = .headphones
+            var connectedDevices: [BluetoothPeripheral] = []
+            var disconnectedDevices: [BluetoothPeripheral] = []
+            
+            let pipe = Pipe()
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+            process.arguments = ["SPBluetoothDataType", "-json"]
+            process.standardOutput = pipe
+            process.standardError = FileHandle.nullDevice
+            
+            do {
+                try process.run()
+                process.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let spArray = json["SPBluetoothDataType"] as? [[String: Any]] {
+                    for entry in spArray {
+                        // Connected Devices
+                        if let connected = entry["device_connected"] as? [[String: Any]] {
+                            for devDict in connected {
+                                for (devName, devInfo) in devDict {
+                                    if let info = devInfo as? [String: Any] {
+                                        let batteryStr = (info["device_batteryLevelMain"] as? String ?? info["device_batteryLevel"] as? String ?? "").replacingOccurrences(of: "%", with: "")
+                                        let battery = Int(batteryStr)
+                                        let minor = (info["device_minorType"] as? String ?? "").lowercased()
+                                        let address = info["device_address"] as? String ?? devName
+                                        
+                                        let type: PeripheralType
+                                        let lower = (devName + " " + minor).lowercased()
+                                        if lower.contains("mouse") {
+                                            type = .mouse
+                                        } else if lower.contains("keyboard") {
+                                            type = .keyboard
+                                        } else if lower.contains("trackpad") {
+                                            type = .trackpad
+                                        } else if lower.contains("headphone") || lower.contains("airpod") || lower.contains("beats") || lower.contains("audio") {
+                                            type = .headphones
+                                        } else if lower.contains("phone") || lower.contains("iphone") || lower.contains("watch") {
+                                            type = .phone
+                                        } else {
+                                            type = .mouse
+                                        }
+                                        
+                                        connectedDevices.append(BluetoothPeripheral(
+                                            id: address,
+                                            name: devName,
+                                            type: type,
+                                            batteryLevel: battery,
+                                            isConnected: true
+                                        ))
+                                    }
                                 }
-                                devices.append(BluetoothPeripheral(id: name, name: name, type: type, batteryLevel: battery))
                             }
                         }
-                        IOObjectRelease(service)
-                        service = IOIteratorNext(iterator)
+                        
+                        // Not Connected / Paired Devices
+                        if let notConnected = entry["device_not_connected"] as? [[String: Any]] {
+                            for devDict in notConnected {
+                                for (devName, devInfo) in devDict {
+                                    let address: String
+                                    if let info = devInfo as? [String: Any] {
+                                        address = info["device_address"] as? String ?? devName
+                                    } else {
+                                        address = devName
+                                    }
+                                    
+                                    let lower = devName.lowercased()
+                                    let type: PeripheralType
+                                    if lower.contains("mouse") {
+                                        type = .mouse
+                                    } else if lower.contains("keyboard") {
+                                        type = .keyboard
+                                    } else if lower.contains("trackpad") {
+                                        type = .trackpad
+                                    } else if lower.contains("phone") || lower.contains("iphone") || lower.contains("watch") {
+                                        type = .phone
+                                    } else {
+                                        type = .headphones
+                                    }
+                                    
+                                    disconnectedDevices.append(BluetoothPeripheral(
+                                        id: address,
+                                        name: devName,
+                                        type: type,
+                                        batteryLevel: nil,
+                                        isConnected: false
+                                    ))
+                                }
+                            }
+                        }
                     }
-                    IOObjectRelease(iterator)
                 }
+            } catch {
+                // Ignore process launch errors
             }
             
-            if devices.isEmpty {
-                devices = [
-                    BluetoothPeripheral(id: "p1", name: "AirPods Pro", type: .headphones, batteryLevel: 50, isConnected: true),
-                    BluetoothPeripheral(id: "p2", name: "Magic Keyboard", type: .keyboard, batteryLevel: 91, isConnected: true),
-                    BluetoothPeripheral(id: "p3", name: "Magic Trackpad", type: .trackpad, batteryLevel: 47, isConnected: true),
-                    BluetoothPeripheral(id: "p4", name: "Empty Slot", type: .placeholder, batteryLevel: nil, isConnected: false)
-                ]
-            } else {
-                while devices.count < 4 {
-                    devices.append(BluetoothPeripheral(id: "slot_\(devices.count)", name: "Empty Slot", type: .placeholder, batteryLevel: nil, isConnected: false))
-                }
+            // Build menu bar 4-pillar list:
+            // Real connected devices first, followed by clean empty slots (NO fake devices)
+            var menuBarSlots = connectedDevices
+            while menuBarSlots.count < 4 {
+                menuBarSlots.append(BluetoothPeripheral(
+                    id: "slot_\(menuBarSlots.count)",
+                    name: "Available Slot",
+                    type: .placeholder,
+                    batteryLevel: nil,
+                    isConnected: false
+                ))
             }
             
-            self.bluetoothDevices = Array(devices.prefix(4))
+            let finalConnected = connectedDevices
+            let finalDisconnected = disconnectedDevices
+            let finalMenuBar = Array(menuBarSlots.prefix(4))
+            
+            DispatchQueue.main.async {
+                self.bluetoothDevices = finalMenuBar
+                self.connectedBluetoothDevices = finalConnected
+                self.pairedBluetoothDevices = finalDisconnected
+            }
         }
     }
     
