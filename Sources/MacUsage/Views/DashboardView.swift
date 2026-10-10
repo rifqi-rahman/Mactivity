@@ -24,9 +24,22 @@ public struct DashboardView: View {
                         uiState.selectedDevice = "MacBook Pro"
                     }
                     
-                    DevicePillButton(title: "System Stats", isSelected: uiState.selectedDevice == "System Stats") {
-                        uiState.selectedDevice = "System Stats"
+                    Button(action: {
+                        WindowManager.shared.openWindow(tab: .processes)
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "macwindow")
+                            Text("Open App")
+                        }
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.12))
+                        .cornerRadius(12)
                     }
+                    .buttonStyle(.plain)
+                    .help("Open Full Mac App Inspector Window")
                 }
                 
                 Spacer()
@@ -110,6 +123,10 @@ public struct DashboardView: View {
                     }
                     
                     Divider()
+                    
+                    Button("Open Full Mac App Window") {
+                        WindowManager.shared.openWindow(tab: .processes)
+                    }
                     
                     Button("Open Activity Monitor") {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))

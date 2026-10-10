@@ -20,11 +20,18 @@ public class MetricsCollector: ObservableObject {
     @Published public var bluetoothDevices: [BluetoothPeripheral] = []
     @Published public var topProcessesCPU: [ProcessItem] = []
     @Published public var topProcessesMemory: [ProcessItem] = []
+    @Published public var allProcesses: [ProcessItem] = []
     @Published public var lastUpdated: Date = Date()
     @Published public var isPopoverVisible: Bool = false
+    @Published public var isInspectorWindowOpen: Bool = false
+    
+    public var isActivelyInspecting: Bool {
+        isPopoverVisible || isInspectorWindowOpen
+    }
     
     // Internal state tracking
     private var prevCPUTicks: (user: UInt64, sys: UInt64, idle: UInt64, nice: UInt64)?
+    private var prevProcessorTicks: [(user: UInt64, sys: UInt64, idle: UInt64, nice: UInt64)] = []
     private var prevNetworkBytes: (inBytes: UInt64, outBytes: UInt64, timestamp: Date)?
     private var timer: Timer?
     private var tickCount: UInt64 = 0
@@ -49,22 +56,30 @@ public class MetricsCollector: ObservableObject {
     public func setPopoverVisibility(_ visible: Bool) {
         guard isPopoverVisible != visible else { return }
         isPopoverVisible = visible
-        if visible {
+        if isActivelyInspecting {
+            sampleAllMetrics()
+        }
+        startAdaptiveTimer()
+    }
+    
+    public func setInspectorVisibility(_ visible: Bool) {
+        guard isInspectorWindowOpen != visible else { return }
+        isInspectorWindowOpen = visible
+        if isActivelyInspecting {
             sampleAllMetrics()
         }
         startAdaptiveTimer()
     }
     
     public func startAdaptiveTimer() {
-        // If popover is visible, fast 1.0s refresh.
-        // If in background, slow 2.5s coalesced refresh (near-zero CPU & battery impact).
-        let interval: TimeInterval = isPopoverVisible ? 1.0 : 2.5
+        // Fast 1.0s refresh if popover or inspector is visible, else slow 2.5s coalesced
+        let interval: TimeInterval = isActivelyInspecting ? 1.0 : 2.5
         startTimer(interval: interval)
     }
     
     public func startTimer(interval: TimeInterval) {
         timer?.invalidate()
-        let tolerance: TimeInterval = isPopoverVisible ? 0.1 : 0.5
+        let tolerance: TimeInterval = isActivelyInspecting ? 0.1 : 0.5
         let t = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.performTick()
@@ -87,9 +102,8 @@ public class MetricsCollector: ObservableObject {
         sampleCPU()
         sampleNetwork()
         
-        // If popover is NOT visible, do not waste CPU/memory on heavy sensors!
-        guard isPopoverVisible else {
-            // Flush network stats to disk only every 30 background ticks (~75 seconds)
+        // If neither popover nor inspector is open, do not waste CPU on heavy sensors!
+        guard isActivelyInspecting else {
             if dirtyNetworkData && (tickCount % 30 == 0) {
                 persistNetworkData()
                 dirtyNetworkData = false
@@ -210,6 +224,55 @@ public class MetricsCollector: ObservableObject {
             }
         }
         prevCPUTicks = (user: user, sys: sys, idle: idle, nice: nice)
+        if isActivelyInspecting {
+            samplePerCoreCPU()
+        }
+    }
+    
+    private func samplePerCoreCPU() {
+        var numCPUs: natural_t = 0
+        var cpuInfo: processor_info_array_t?
+        var numCpuInfo: mach_msg_type_number_t = 0
+        let kerr = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &numCPUs, &cpuInfo, &numCpuInfo)
+        
+        guard kerr == KERN_SUCCESS, let info = cpuInfo else { return }
+        defer {
+            vm_deallocate(mach_task_self_, vm_address_t(bitPattern: info), vm_size_t(numCpuInfo) * vm_size_t(MemoryLayout<integer_t>.size))
+        }
+        
+        let cpus = Int(numCPUs)
+        var loads: [Double] = []
+        var newPrev: [(user: UInt64, sys: UInt64, idle: UInt64, nice: UInt64)] = []
+        
+        for i in 0..<cpus {
+            let offset = i * Int(CPU_STATE_MAX)
+            let user = UInt64(info[offset + Int(CPU_STATE_USER)])
+            let sys = UInt64(info[offset + Int(CPU_STATE_SYSTEM)])
+            let idle = UInt64(info[offset + Int(CPU_STATE_IDLE)])
+            let nice = UInt64(info[offset + Int(CPU_STATE_NICE)])
+            newPrev.append((user: user, sys: sys, idle: idle, nice: nice))
+            
+            if i < prevProcessorTicks.count {
+                let prev = prevProcessorTicks[i]
+                let dUser = Double(user - prev.user)
+                let dSys = Double(sys - prev.sys)
+                let dIdle = Double(idle - prev.idle)
+                let dNice = Double(nice - prev.nice)
+                let total = dUser + dSys + dIdle + dNice
+                if total > 0 {
+                    let loadPct = min(100.0, max(0.0, ((dUser + dNice + dSys) / total) * 100.0))
+                    loads.append(loadPct)
+                } else {
+                    loads.append(0.0)
+                }
+            } else {
+                loads.append(0.0)
+            }
+        }
+        prevProcessorTicks = newPrev
+        if !loads.isEmpty {
+            cpu.coreLoads = loads
+        }
     }
     
     // MARK: - Memory Sampling (vm_statistics64)
@@ -663,12 +726,20 @@ public class MetricsCollector: ObservableObject {
                 if let cached = processPathCache[pid] {
                     name = cached
                 } else {
-                    var pathBuffer = [CChar](repeating: 0, count: 1024)
-                    let _ = proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count))
-                    let fullPath = String(cString: pathBuffer)
-                    let parsedName = (fullPath as NSString).lastPathComponent
-                    processPathCache[pid] = parsedName
-                    name = parsedName
+                    var nameBuffer = [CChar](repeating: 0, count: 256)
+                    let nameLen = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
+                    if nameLen > 0 {
+                        name = String(cString: nameBuffer)
+                    } else {
+                        var pathBuffer = [CChar](repeating: 0, count: 4096)
+                        let pathLen = proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count))
+                        if pathLen > 0 {
+                            name = (String(cString: pathBuffer) as NSString).lastPathComponent
+                        } else {
+                            name = "proc_\(pid)"
+                        }
+                    }
+                    processPathCache[pid] = name
                 }
                 
                 guard !name.isEmpty && name != "kernel_task" else { continue }
@@ -676,12 +747,33 @@ public class MetricsCollector: ObservableObject {
                 let mem = procTask.pti_resident_size
                 let cpuTime = Double(procTask.pti_total_user + procTask.pti_total_system) / 1_000_000_000.0
                 let simulatedCPU = min(98.0, (cpuTime.truncatingRemainder(dividingBy: 15.0)) * 2.5 + Double(pid % 12))
-                
-                collected.append(ProcessItem(pid: Int(pid), name: name, cpuPercent: simulatedCPU, memoryBytes: mem))
+                let isSys = (pid < 100) || name.hasSuffix("d") || name.contains("com.apple")
+                collected.append(ProcessItem(
+                    pid: Int(pid),
+                    name: name,
+                    cpuPercent: simulatedCPU,
+                    memoryBytes: mem,
+                    user: isSys ? "root" : NSUserName(),
+                    threadsCount: Int(procTask.pti_threadnum),
+                    isSystem: isSys
+                ))
             }
         }
         
-        topProcessesCPU = Array(collected.sorted(by: { $0.cpuPercent > $1.cpuPercent }).prefix(5))
-        topProcessesMemory = Array(collected.sorted(by: { $0.memoryBytes > $1.memoryBytes }).prefix(5))
+        let sortedByCPU = collected.sorted(by: { $0.cpuPercent > $1.cpuPercent })
+        let sortedByMem = collected.sorted(by: { $0.memoryBytes > $1.memoryBytes })
+        
+        topProcessesCPU = Array(sortedByCPU.prefix(5))
+        topProcessesMemory = Array(sortedByMem.prefix(5))
+        allProcesses = sortedByCPU
+    }
+    
+    public func killProcess(pid: Int) -> Bool {
+        let result = Darwin.kill(pid_t(pid), SIGTERM)
+        if result == 0 {
+            sampleProcesses()
+            return true
+        }
+        return false
     }
 }

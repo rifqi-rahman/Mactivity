@@ -80,24 +80,44 @@ mac-usage/
 ├── Sources/
 │   └── MacUsage/
 │       ├── Main.swift             # App entry point (NSApplicationDelegate)
-│       ├── MenuBarController.swift# NSStatusItem and NSPopover lifecycle controller
+│       ├── MenuBarController.swift# NSStatusItem (fixed 92pt) and NSPopover lifecycle controller
 │       ├── Models/
-│       │   ├── SystemMetrics.swift# Data structures for all 11 modules
-│       │   └── UIState.swift      # Observable UI state
+│       │   ├── SystemMetrics.swift# Data structures for all modules
+│       │   └── UIState.swift      # Observable UI & inspector state
 │       ├── Services/
-│       │   └── MetricsCollector.swift # Mach, IOKit, sysctl, getifaddrs kernel sampler
+│       │   ├── MetricsCollector.swift # Mach, IOKit, sysctl, libproc kernel sampler
+│       │   └── WindowManager.swift    # Full Mac App window manager & activation policy controller
 │       └── Views/
 │           ├── DashboardView.swift    # 2-column Bento dashboard popover
 │           ├── Cards/
-│           │   └── CardViews.swift    # Modular cards for all 11 modules
-│           └── Components/
-│               └── VisualComponents.swift # Donut charts, radial ticks, thermometer, etc.
+│           │   └── CardViews.swift    # Modular cards for all modules
+│           ├── Components/
+│           │   └── VisualComponents.swift # Donut charts, radial ticks, thermometer, etc.
+│           └── Inspector/
+│               └── InspectorWindowView.swift # Full Mac App detail inspector (Processes, Cores, Memory, etc.)
 └── build/
     └── MacUsage.app               # Compiled native arm64 macOS application
 ```
 
 ---
 
+## 🪟 Dual-Mode Architecture (Menu Bar + Dedicated Mac App)
+
+MacUsage operates in **two complementary modes**:
+1. **Background Menu Bar Mode (Default)**:
+   - Sits in the menu bar with zero Dock footprint (`NSApp.setActivationPolicy(.accessory)`).
+   - Fixed 92pt status item width prevents the popup from shifting horizontally when metric numbers fluctuate.
+   - Low-overhead background sampling (~20MB RAM, <0.3% CPU).
+2. **Dedicated Full Mac App Window (Detail Inspector)**:
+   - Clicking **"Processes"** or any card's detail shortcut (`arrow.up.right`) opens the dedicated Mac App window.
+   - Automatically promotes to a standard application with Dock presence (`NSApp.setActivationPolicy(.regular)`).
+   - Features searchable, sortable process table with thread counts and one-click process termination.
+   - Features dedicated deep-dive tabs for 14-core M4 Pro topology, memory distribution, network bandwidth, volumes, and battery/thermals.
+   - Closing the window cleanly reverts the app back to background menu bar mode without quitting.
+
+---
+
 ## 🔒 Privacy & Performance
 - **100% Local**: No analytics, telemetry, or remote data transmission.
 - **Low Power Architecture**: Uses native C/Mach kernel APIs (`host_statistics64`, `vm_statistics64`, `libproc`) and IOKit registry readers to sample hardware without spawning sub-processes or shell scripts.
+

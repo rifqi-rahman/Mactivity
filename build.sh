@@ -29,9 +29,11 @@ swiftc -parse-as-library -module-cache-path ".build/ModuleCache" \
   Sources/MacUsage/Models/SystemMetrics.swift \
   Sources/MacUsage/Models/UIState.swift \
   Sources/MacUsage/Services/MetricsCollector.swift \
+  Sources/MacUsage/Services/WindowManager.swift \
   Sources/MacUsage/Views/Components/VisualComponents.swift \
   Sources/MacUsage/Views/Cards/CardViews.swift \
   Sources/MacUsage/Views/DashboardView.swift \
+  Sources/MacUsage/Views/Inspector/InspectorWindowView.swift \
   -o "$MACOS_DIR/$APP_NAME"
 
 cp Resources/Info.plist "$CONTENTS/Info.plist"

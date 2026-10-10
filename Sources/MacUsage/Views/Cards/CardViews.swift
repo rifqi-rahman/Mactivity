@@ -39,6 +39,17 @@ public struct ProcessorCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .processor)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Processor Inspector in App")
+                
                 Text("14-Core")
                     .font(.system(size: 10, weight: .medium))
                     .padding(.horizontal, 6)
@@ -88,6 +99,16 @@ public struct MemoryCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .memory)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Memory Inspector in App")
             }
             
             HStack(alignment: .center, spacing: 12) {
@@ -159,6 +180,17 @@ public struct NetworkCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .network)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Network Inspector in App")
+                
                 Text(network.connectionType)
                     .font(.system(size: 10, weight: .medium))
                     .padding(.horizontal, 6)
@@ -216,6 +248,16 @@ public struct NetworkDataCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .network)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Network History in App")
             }
             
             Text("Today")
@@ -264,6 +306,16 @@ public struct DiskCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .disk)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Storage Inspector in App")
             }
             
             HStack(alignment: .center, spacing: 10) {
@@ -311,6 +363,16 @@ public struct TemperatureCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .battery)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Thermal Diagnostics in App")
             }
             
             HStack(alignment: .center) {
@@ -359,6 +421,17 @@ public struct FansCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .battery)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Fans Inspector in App")
+                
                 Text(fans.status)
                     .font(.system(size: 10, weight: .medium))
                     .padding(.horizontal, 6)
@@ -454,6 +527,17 @@ public struct BatteryCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .battery)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Battery Diagnostics in App")
+                
                 Text(battery.isACConnected ? "AC Power" : "On Battery")
                     .font(.system(size: 10, weight: .medium))
                     .padding(.horizontal, 6)
@@ -527,12 +611,22 @@ public struct ProcessesCardView: View {
                     .foregroundColor(.secondary)
                 Spacer()
                 
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .processes)
+                }) {
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+                .help("Open Full Process Inspector App")
+                
                 Picker("", selection: $uiState.processMode) {
                     Text("CPU").tag(0)
                     Text("Memory").tag(1)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 110)
+                .frame(width: 95)
             }
             
             let list = uiState.processMode == 0 ? topCPU : topMem
@@ -551,16 +645,34 @@ public struct ProcessesCardView: View {
                             .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 1)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        WindowManager.shared.openWindow(tab: .processes)
+                    }
                 }
             }
             
             HStack {
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .processes)
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.forward.app")
+                        Text("Detailed Inspector")
+                    }
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+                
                 Spacer()
+                
                 Button(action: {
                     NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
                 }) {
-                    Text("Open Activity Monitor")
+                    Text("Activity Monitor")
                         .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
                 .buttonStyle(.borderless)
             }
@@ -583,6 +695,16 @@ public struct VolumesCardView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                 Spacer()
+                
+                Button(action: {
+                    WindowManager.shared.openWindow(tab: .disk)
+                }) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Open Storage Inspector in App")
             }
             
             VStack(spacing: 6) {

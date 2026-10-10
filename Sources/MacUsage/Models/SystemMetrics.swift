@@ -11,6 +11,7 @@ public struct CPUInfo: Equatable {
     public var history: [Double] = Array(repeating: 0.0, count: 18)
     public var userHistory: [Double] = Array(repeating: 0.0, count: 18)
     public var systemHistory: [Double] = Array(repeating: 0.0, count: 18)
+    public var coreLoads: [Double] = Array(repeating: 0.0, count: 14)
     
     public init() {}
 }
@@ -184,12 +185,18 @@ public struct ProcessItem: Identifiable, Equatable {
     public var name: String
     public var cpuPercent: Double
     public var memoryBytes: UInt64
+    public var user: String
+    public var threadsCount: Int
+    public var isSystem: Bool
     
-    public init(pid: Int, name: String, cpuPercent: Double, memoryBytes: UInt64) {
+    public init(pid: Int, name: String, cpuPercent: Double, memoryBytes: UInt64, user: String = "user", threadsCount: Int = 4, isSystem: Bool = false) {
         self.pid = pid
         self.name = name
         self.cpuPercent = cpuPercent
         self.memoryBytes = memoryBytes
+        self.user = user
+        self.threadsCount = threadsCount
+        self.isSystem = isSystem
     }
     
     public var memoryString: String {

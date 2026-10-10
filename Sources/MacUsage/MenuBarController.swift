@@ -21,7 +21,8 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
     }
     
     private func setupStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Fixed length (92.0 pt) ensures the menu bar button NEVER resizes or shifts the popover anchor!
+        statusItem = NSStatusBar.system.statusItem(withLength: 92.0)
         
         if let button = statusItem.button {
             button.target = self
@@ -111,7 +112,8 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         menu.addItem(NSMenuItem(title: "MacUsage · M4 Pro", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         
-        menu.addItem(NSMenuItem(title: "Open Dashboard", action: #selector(openDashboardAction), keyEquivalent: "d"))
+        menu.addItem(NSMenuItem(title: "Open Dashboard Popover", action: #selector(openDashboardAction), keyEquivalent: "d"))
+        menu.addItem(NSMenuItem(title: "Open Full Inspector Window...", action: #selector(openInspectorWindowAction), keyEquivalent: "o"))
         menu.addItem(NSMenuItem(title: "Launch Activity Monitor", action: #selector(openActivityMonitorAction), keyEquivalent: "a"))
         menu.addItem(NSMenuItem(title: "Force Refresh", action: #selector(refreshAction), keyEquivalent: "r"))
         
@@ -121,6 +123,10 @@ public class MenuBarController: NSObject, NSPopoverDelegate {
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil // Restore toggle behavior after click
+    }
+    
+    @objc private func openInspectorWindowAction() {
+        WindowManager.shared.openWindow(tab: .processes)
     }
     
     @objc private func openDashboardAction() {
