@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mactivity — Native macOS & Apple Silicon Telemetry Monitor</title>
+  
+  <!-- SEO & Social Meta Tags -->
+  <meta name="description" content="A lightweight, native macOS & Apple Silicon system telemetry monitor. Crafted in Swift 6 & SwiftUI with direct Mach kernel telemetry, zero mock data, and an architectural Bento grid.">
+  <meta name="keywords" content="Mactivity, macOS, Apple Silicon, Swift 6, SwiftUI, Menu Bar Monitor, Activity Monitor, Bento Grid, M4 Pro, Mac Hardware, Open Source">
+  <meta name="author" content="Rifqi Rahman">
+  <meta name="theme-color" content="#0F3040">
+  
+  <!-- OpenGraph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mactivity — Native macOS & Apple Silicon Telemetry Monitor">
+  <meta property="og:description" content="Engineered in Swift 6 & SwiftUI with direct kernel telemetry, zero mock data, and an architectural Bento dashboard.">
+  <meta property="og:image" content="assets/icon.png">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Ambient Mesh -->
+  <div class="ambient-mesh" aria-hidden="true">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="site-header">
+    <nav class="nav-container">
+      <a href="#" class="brand-lockup">
+        <img src="assets/icon.png" alt="Mactivity Icon" class="brand-icon">
+        <span class="brand-name">Mactivity</span>
+        <span class="brand-badge">macOS</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#hardware">Hardware Intelligence</a>
+        <a href="#bento-preview">Bento Popover</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#get-started">Quickstart</a>
+      </div>
+
+      <div class="nav-actions">
+        <a href="https://github.com/rifqirahman/mac-usage" target="_blank" rel="noopener noreferrer" class="btn btn-github">
+          <svg class="gh-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>Star on GitHub</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="pill-announcement">
+        <span class="pill-dot"></span>
+        <span class="pill-text">Swift 6.0 · Mach Kernel Telemetry · Zero Mock Data</span>
+      </div>
+
+      <h1 class="hero-title">
+        The Native Activity Monitor<br>
+        <span class="gradient-text">Your Mac Always Deserved.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Engineered exclusively for macOS & Apple Silicon. Lives in your menu bar with zero pixel jitter,
+        and expands into an architectural Bento dashboard that floats seamlessly over any fullscreen app.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="#get-started" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 11l5 5 5-5M12 4v12"/>
+          </svg>
+          <span>Get Started Free</span>
+        </a>
+        <a href="https://github.com/rifqirahman/mac-usage" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span>Explore Source Code</span>
+        </a>
+      </div>
+
+      <!-- Quick Stats Strip -->
+      <div class="stats-strip">
+        <div class="stat-item">
+          <span class="stat-number">~20 MB</span>
+          <span class="stat-label">RAM Footprint</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">&lt;0.3%</span>
+          <span class="stat-label">CPU Overhead</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">0 ms</span>
+          <span class="stat-label">Shell Latency (Mach Direct)</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Genuine Telemetry (No Mock)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Hero Simulator -->
+    <div class="hero-simulator-container" id="bento-preview">
+      
+      <!-- macOS Menu Bar Simulator Header -->
+      <div class="mac-menubar-mockup">
+        <div class="mac-menubar-left">
+          <span class="apple-glyph"></span>
+          <span class="active-app-name">Finder</span>
+          <span class="menu-item-text">File</span>
+          <span class="menu-item-text">Edit</span>
+          <span class="menu-item-text">View</span>
+          <span class="menu-item-text">Go</span>
+          <span class="menu-item-text">Window</span>
+          <span class="menu-item-text">Help</span>
+        </div>
+
+        <div class="mac-menubar-right">
+          <span class="sys-icon">􀙇</span>
+          <span class="sys-icon">􀛩 94%</span>
+
+          <!-- Interactive Mactivity Status Item -->
+          <button class="mactivity-status-pill active" id="menuBarPill" title="Click to toggle Bento Popover">
+            <span class="pill-icon" id="pillIcon">⊚</span>
+            <span class="pill-text-metric" id="pillMetric">14%  ↓28.4K</span>
+          </button>
+
+          <span class="sys-clock" id="liveClock">Sat 16:30</span>
+          <span class="sys-icon">􀊫</span>
+        </div>
+      </div>
+
+      <!-- Mode Selector Bar -->
+      <div class="mode-selector-bar">
+        <span class="mode-selector-label">Menu Bar Metric Modes:</span>
+        <div class="mode-chips" id="modeChips">
+          <button class="chip active" data-mode="cpuAndNet">CPU & Net</button>
+          <button class="chip" data-mode="cpuOnly">CPU Only</button>
+          <button class="chip" data-mode="cpuAndRam">CPU & RAM</button>
+          <button class="chip" data-mode="memoryOnly">RAM Only</button>
+          <button class="chip" data-mode="battery">Battery</button>
+          <button class="chip" data-mode="networkOnly">Network</button>
+          <button class="chip" data-mode="temperature">Thermals</button>
+          <button class="chip" data-mode="compactAll">Compact All</button>
+        </div>
+      </div>
+
+      <!-- Floating Bento Popover Simulator -->
+      <div class="bento-popover-wrapper" id="bentoPopover">
+        <div class="bento-popover-header">
+          <div class="header-left">
+            <span class="chip-title" id="chipTitleBadge">Apple M4 Pro</span>
+            <span class="chip-topology" id="chipTopologyBadge">14 Cores (10P + 4E)</span>
+          </div>
+          <div class="header-right">
+            <span class="live-dot-pulse"></span>
+            <span class="live-status-text">LIVE 1.0s</span>
+          </div>
+        </div>
+
+        <!-- 2-Column Bento Cards Grid -->
+        <div class="bento-grid-cards">
+          
+          <!-- Card 1: CPU -->
+          <div class="bento-card card-cpu">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">􀧓</span>
+                <span class="card-title">Processor (CPU)</span>
+              </div>
+              <span class="card-badge" id="cpuPctBadge">14.2%</span>
+            </div>
+            <div class="core-clusters">
+              <div class="cluster-row">
+                <span class="cluster-label">P-Cores (10x)</span>
+                <div class="cluster-bar-track">
+                  <div class="cluster-bar-fill fill-p" style="width: 22%;"></div>
+                </div>
+                <span class="cluster-val">22%</span>
+              </div>
+              <div class="cluster-row">
+                <span class="cluster-label">E-Cores (4x)</span>
+                <div class="cluster-bar-track">
+                  <div class="cluster-bar-fill fill-e" style="width: 8%;"></div>
+                </div>
+                <span class="cluster-val">8%</span>
+              </div>
+            </div>
+            <!-- CPU Sparkline -->
+            <canvas class="sparkline-canvas" id="cpuCanvas" width="210" height="42"></canvas>
+          </div>
+
+          <!-- Card 2: Unified Memory -->
+          <div class="bento-card card-ram">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">􀫥</span>
+                <span class="card-title">Unified Memory</span>
+              </div>
+              <span class="card-badge badge-ram" id="ramPctBadge">20.4 / 48 GB</span>
+            </div>
+            <div class="memory-donut-wrapper">
+              <div class="donut-display">
+                <svg viewBox="0 0 36 36" class="donut-svg">
+                  <path class="donut-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path class="donut-fill" stroke-dasharray="42.5, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <div class="donut-center-text">
+                  <span class="donut-percent">42.5%</span>
+                  <span class="donut-sub">Used</span>
+                </div>
+              </div>
+              <div class="memory-breakdown">
+                <div class="mem-item"><span class="dot-app"></span> App: 14.8 GB</div>
+                <div class="mem-item"><span class="dot-wired"></span> Wired: 3.2 GB</div>
+                <div class="mem-item"><span class="dot-compressed"></span> Comp: 2.4 GB</div>
+                <div class="pressure-pill green">Pressure: Nominal</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Metal GPU -->
+          <div class="bento-card card-gpu">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">􀧗</span>
+                <span class="card-title">Metal 3 GPU</span>
+              </div>
+              <span class="card-badge" id="gpuCoresBadge">20 Cores · 9.4%</span>
+            </div>
+            <canvas class="sparkline-canvas" id="gpuCanvas" width="210" height="42"></canvas>
+            <div class="gpu-meta">
+              <span>VRAM: 1.8 GB shared</span>
+              <span>Metal Accel: Active</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Symmetrical Network -->
+          <div class="bento-card card-net">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">􀤆</span>
+                <span class="card-title">Network Activity</span>
+              </div>
+              <span class="card-badge" id="netSpeedBadge">↓ 1.4 MB/s</span>
+            </div>
+            <!-- Mirrored Waves -->
+            <canvas class="network-wave-canvas" id="netCanvas" width="210" height="48"></canvas>
+            <div class="net-legend">
+              <span class="net-down">↓ 1.42 MB/s Down</span>
+              <span class="net-up">↑ 184 KB/s Up</span>
+            </div>
+          </div>
+
+          <!-- Card 5: Thermals & Blowers -->
+          <div class="bento-card card-thermals">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">􀇬</span>
+                <span class="card-title">Thermals & Fans</span>
+              </div>
+              <span class="card-badge" id="tempBadge">44°C · Cool</span>
+            </div>
+            <div class="thermal-row">
+              <div class="temp-gauge">
+                <div class="temp-bar-bg">
+                  <div class="temp-bar-fill" id="tempBarFill" style="width: 44%;"></div>
+                </div>
+              </div>
+              <div class="fans-readout" id="fansReadout">
+                <span class="fan-icon">􀝉</span>
+                <span class="fan-text" id="fanText">Dual Blowers · 1,480 RPM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 6: Connected Peripherals -->
+          <div class="bento-card card-bluetooth">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">􀊫</span>
+                <span class="card-title">Peripherals Battery</span>
+              </div>
+              <span class="card-badge">Genuine IOKit</span>
+            </div>
+            <div class="peripherals-grid">
+              <div class="periph-item">
+                <span class="p-icon">🖱️</span>
+                <div class="p-pillar"><div class="p-level" style="height: 85%;"></div></div>
+                <span class="p-pct">85%</span>
+                <span class="p-name">MX Master</span>
+              </div>
+              <div class="periph-item">
+                <span class="p-icon">⌨️</span>
+                <div class="p-pillar"><div class="p-level" style="height: 92%;"></div></div>
+                <span class="p-pct">92%</span>
+                <span class="p-name">Magic Keybd</span>
+              </div>
+              <div class="periph-item">
+                <span class="p-icon">🎧</span>
+                <div class="p-pillar"><div class="p-level" style="height: 74%;"></div></div>
+                <span class="p-pct">74%</span>
+                <span class="p-name">AirPods Pro</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bento-popover-footer">
+          <span class="bento-hint">💡 Drag & drop in Edit Mode to reorder cards</span>
+          <button class="btn-inspect-link">Open Full Inspector App →</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Universal Hardware Intelligence Interactive Section -->
+  <section class="section hardware-section" id="hardware">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-tag">Zero Mock Data Architecture</span>
+        <h2 class="section-title">Dynamic Hardware Intelligence</h2>
+        <p class="section-desc">
+          Mactivity detects your exact Mac model, core topologies, and cooling physics on launch.
+          Click each model below to preview how telemetry auto-adapts:
+        </p>
+      </div>
+
+      <!-- Hardware Model Tabs -->
+      <div class="mac-tabs" id="macTabs">
+        <button class="mac-tab active" data-mac="mbp">
+          <span class="mac-tab-icon">💻</span>
+          <span class="mac-tab-title">MacBook Pro</span>
+          <span class="mac-tab-sub">M-Series Pro / Max</span>
+        </button>
+        <button class="mac-tab" data-mac="mba">
+          <span class="mac-tab-icon">🪶</span>
+          <span class="mac-tab-title">MacBook Air</span>
+          <span class="mac-tab-sub">0 dB Fanless Architecture</span>
+        </button>
+        <button class="mac-tab" data-mac="mini">
+          <span class="mac-tab-icon">🖥️</span>
+          <span class="mac-tab-title">Mac mini / iMac</span>
+          <span class="mac-tab-sub">Desktop Single Blower</span>
+        </button>
+        <button class="mac-tab" data-mac="studio">
+          <span class="mac-tab-icon">⚡</span>
+          <span class="mac-tab-title">Mac Studio / Pro</span>
+          <span class="mac-tab-sub">Ultra Workstation Power</span>
+        </button>
+      </div>
+
+      <!-- Dynamic Hardware Detail Card -->
+      <div class="hardware-card" id="hwDetailCard">
+        <div class="hw-card-grid">
+          <div class="hw-item">
+            <span class="hw-item-label">Detected Model</span>
+            <span class="hw-item-value" id="hwModel">MacBook Pro (14-inch, M4 Pro)</span>
+          </div>
+          <div class="hw-item">
+            <span class="hw-item-label">Processor Core Topology</span>
+            <span class="hw-item-value" id="hwCores">14 Cores (10 Performance + 4 Efficiency)</span>
+          </div>
+          <div class="hw-item">
+            <span class="hw-item-label">Cooling & Fan Physics</span>
+            <span class="hw-item-value" id="hwCooling">Dual Centrifugal Blowers (Active Left/Right RPM)</span>
+          </div>
+          <div class="hw-item">
+            <span class="hw-item-label">Power Architecture</span>
+            <span class="hw-item-value" id="hwPower">Battery Health %, Cycle Count, MagSafe 3 Rail</span>
+          </div>
+          <div class="hw-item">
+            <span class="hw-item-label">Metal GPU Pipeline</span>
+            <span class="hw-item-value" id="hwGpu">20-Core Hardware Ray Tracing Engine</span>
+          </div>
+          <div class="hw-item">
+            <span class="hw-item-label">Memory Subsystem</span>
+            <span class="hw-item-value" id="hwMemory">48 GB Unified Memory (273 GB/s Bandwidth)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Architectural Pillars (Bento Feature Showcase) -->
+  <section class="section features-section" id="features">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-tag">Engineering Highlights</span>
+        <h2 class="section-title">Built for Precision. Tuned for Power.</h2>
+        <p class="section-desc">
+          Every layer of Mactivity was written from scratch in native Swift 6 and AppKit to eliminate the flaws of conventional monitors.
+        </p>
+      </div>
+
+      <div class="features-bento-grid">
+        
+        <!-- Feature 1 -->
+        <div class="feature-box feat-wide">
+          <div class="feat-badge">Zero Jitter</div>
+          <h3 class="feat-heading">Pixel-Stabilized Menu Bar Pill</h3>
+          <p class="feat-body">
+            Unlike other menu bar tools that shrink or stretch when CPU percentages jump from 9% to 100%,
+            Mactivity enforces fixed-width geometry for every metric mode. Your adjacent menu bar icons stay perfectly anchored.
+          </p>
+          <div class="feat-visual feat-pill-visual">
+            <div class="demo-pill">⊚ 14%  ↓24K</div>
+            <div class="demo-pill">⊚ 99%  ↓24K</div>
+            <span class="demo-caption">Same exact 92pt width. Zero shift.</span>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-box feat-normal">
+          <div class="feat-badge">Auxiliary Overlay</div>
+          <h3 class="feat-heading">Floats Over Fullscreen Apps</h3>
+          <p class="feat-body">
+            Equipped with <code>.canJoinAllSpaces</code> and <code>.fullScreenAuxiliary</code> window server behaviors.
+            Mactivity floats gracefully above full-screen Xcode, Safari, or IDE spaces without triggering annoying desktop transitions.
+          </p>
+          <div class="feat-tags">
+            <span>Click Outside to Close</span>
+            <span>ESC to Dismiss</span>
+            <span>Status Bar Level</span>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-box feat-normal">
+          <div class="feat-badge">Zero Shell Overhead</div>
+          <h3 class="feat-heading">Direct Mach & IOKit Telemetry</h3>
+          <p class="feat-body">
+            No <code>/bin/sh -c</code> processes. No spawning of <code>top</code> or <code>pmset</code> commands.
+            We probe C-level kernel structures (<code>host_statistics64</code>, <code>vm_statistics64</code>) directly from Swift.
+          </p>
+          <div class="feat-metrics-compare">
+            <div class="metric-row">
+              <span>Mactivity CPU</span>
+              <strong class="green-text">&lt; 0.3%</strong>
+            </div>
+            <div class="metric-row">
+              <span>Shell-based Apps</span>
+              <strong class="red-text">3% – 8%</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-box feat-wide">
+          <div class="feat-badge">Dual-Mode Architecture</div>
+          <h3 class="feat-heading">Menu Bar Accessory + Dedicated Mac App</h3>
+          <p class="feat-body">
+            Stay lightweight in the background, or launch the dedicated Mac Inspector Window with full-width clickable sidebar tabs,
+            detailed memory pressure charts, per-core timelines, and an instant process termination manager.
+          </p>
+          <div class="feat-dual-mode">
+            <div class="mode-pill active">1. Background Accessory Mode (~20 MB RAM)</div>
+            <div class="mode-arrow">⇄</div>
+            <div class="mode-pill">2. Full Dedicated App (Dock Presence & Multi-Tabs)</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Architectural Color System Section -->
+  <section class="section palette-section">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-tag">Design Language</span>
+        <h2 class="section-title">Nordic Terracotta & Midnight Teal</h2>
+        <p class="section-desc">
+          A bespoke architectural palette crafted for dark mode precision and distraction-free monitoring.
+        </p>
+      </div>
+
+      <div class="palette-grid">
+        <div class="palette-card">
+          <div class="swatch" style="background: #0F3040;"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Midnight Petrol Teal</span>
+            <code class="swatch-hex">#0F3040</code>
+            <p class="swatch-desc">Deep canvas background & frosted glass substrate</p>
+          </div>
+        </div>
+
+        <div class="palette-card">
+          <div class="swatch" style="background: #464858;"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Muted Slate Gray</span>
+            <code class="swatch-hex">#464858</code>
+            <p class="swatch-desc">Structural dividers, borders, and inactive track bars</p>
+          </div>
+        </div>
+
+        <div class="palette-card">
+          <div class="swatch" style="background: #A56F63;"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Muted Terracotta Rose</span>
+            <code class="swatch-hex">#A56F63</code>
+            <p class="swatch-desc">System workloads, upload traffic & secondary gauges</p>
+          </div>
+        </div>
+
+        <div class="palette-card">
+          <div class="swatch" style="background: #D99B7F;"></div>
+          <div class="swatch-info">
+            <span class="swatch-name">Warm Sand Peach</span>
+            <code class="swatch-hex">#D99B7F</code>
+            <p class="swatch-desc">User workloads, download bandwidth & active highlights</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quickstart & Installation Section -->
+  <section class="section get-started-section" id="get-started">
+    <div class="section-container">
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <span class="terminal-title">Terminal — zsh — 80×24</span>
+          <button class="copy-btn" id="copyCmdBtn" title="Copy command">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copyBtnText">Copy</span>
+          </button>
+        </div>
+        <div class="terminal-body">
+          <p class="terminal-comment"># 1. Clone Mactivity from GitHub</p>
+          <p class="terminal-cmd"><span class="prompt">$</span> git clone https://github.com/rifqirahman/mac-usage.git</p>
+          <p class="terminal-cmd"><span class="prompt">$</span> cd mac-usage</p>
+          <p class="terminal-comment"># 2. Build the optimized native application bundle</p>
+          <p class="terminal-cmd"><span class="prompt">$</span> ./build.sh</p>
+          <p class="terminal-comment"># 3. Launch Mactivity into your Menu Bar!</p>
+          <p class="terminal-cmd"><span class="prompt">$</span> open build/Mactivity.app</p>
+        </div>
+      </div>
+
+      <div class="get-started-footer">
+        <div class="req-text">
+          <span>Requires <strong>macOS 14.0+ (Sonoma, Sequoia)</strong></span>
+          <span>·</span>
+          <span>Apple Silicon (M1-M4) & Intel</span>
+          <span>·</span>
+          <span>MIT Open Source</span>
+        </div>
+        <a href="https://github.com/rifqirahman/mac-usage" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-large">
+          <svg class="gh-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>Star & Clone on GitHub</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <div class="footer-brand">
+          <img src="assets/icon.png" alt="Mactivity" width="28" height="28" style="border-radius: 6px;">
+          <span class="footer-name">Mactivity</span>
+        </div>
+        <p class="footer-copy">
+          Designed & engineered with love for macOS by <a href="https://github.com/rifqirahman" target="_blank" rel="noopener noreferrer">Rifqi Rahman</a>.
+        </p>
+      </div>
+
+      <div class="footer-right">
+        <a href="https://github.com/rifqirahman/mac-usage" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+        <a href="https://github.com/rifqirahman/mac-usage/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+        <a href="https://github.com/rifqirahman/mac-usage/blob/main/PRD.md" target="_blank" rel="noopener noreferrer">Technical PRD</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
